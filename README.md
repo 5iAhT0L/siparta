@@ -1,36 +1,188 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SIPARTA — Sistem Informasi Pencatatan RT/RW Terpadu
 
-## Getting Started
+Aplikasi manajemen iuran dan administrasi RT/RW berbasis web. Dirancang untuk menggantikan pencatatan manual (buku/Excel) dengan sistem digital yang transparan dan mudah digunakan.
 
-First, run the development server:
+## Fitur Utama
+
+### Pengurus RT
+- **Iuran** — Kelola jenis iuran bulanan & insidental; generate tagihan otomatis ke semua rumah aktif
+- **Verifikasi Pembayaran** — Setujui atau tolak bukti transfer dari warga; input pembayaran manual (langsung approved)
+- **Data Rumah & KK** — CRUD rumah, kartu keluarga, dan kontrak penyewa; auto-nonaktifkan rumah ketika kosong
+- **Manajemen Warga** — Buat/edit akun warga, setujui pendaftaran mandiri, kelola status aktif/nonaktif
+- **Kas RT** — Catat pengeluaran; pemasukan otomatis dari pembayaran yang diverifikasi
+- **Pengumuman** — Publish pengumuman untuk warga RT
+- **Laporan** — Status pembayaran per periode, export CSV
+- **Pengaturan** — Info rekening bank untuk warga, konfigurasi jadwal reminder
+
+### Warga
+- **Tagihan** — Lihat tagihan rumah; bayar via transfer (upload bukti) atau cash
+- **Riwayat** — Lacak status semua pembayaran
+- **Registrasi Mandiri** — Daftar sendiri, aktif setelah diverifikasi Pengurus RT
+
+### Pengurus RW
+- **Monitoring** — Dashboard read-only untuk semua RT di bawah RW; compliance rate, pemasukan, status iuran per RT
+
+### Fitur Pendukung
+- Voting / musyawarah digital
+- Jadwal kegiatan RT + RSVP
+- Pengajuan layanan (surat domisili, surat pengantar)
+- Notifikasi in-app
+- Reminder otomatis via Vercel Cron Jobs
+
+## Tech Stack
+
+| Layer | Teknologi |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| Database | PostgreSQL via [Neon](https://neon.tech) + Prisma ORM |
+| Auth | JWT (access token + refresh token via httpOnly cookie) |
+| File Upload | Cloudinary |
+| Styling | Tailwind CSS 4 |
+| Deployment | Vercel / Docker |
+
+## Hierarki Data
+
+```
+RW
+└── RT (banyak)
+     └── Rumah (banyak) [tipe: milik | kontrak]
+          ├── KontrakRumah (maks. 1 aktif; hanya tipe kontrak)
+          ├── KartuKeluarga / KK (banyak per rumah)
+          │    └── User/Warga (terhubung ke rumah, NIK unik)
+          └── Tagihan (per rumah aktif — bukan per KK)
+```
+
+## Roles
+
+| Role | Scope |
+|---|---|
+| `pengurus_rt` | Full CRUD untuk RT sendiri |
+| `pengurus_rw` | Read-only untuk semua RT di bawah RW-nya |
+| `warga` | Tagihan & pembayaran milik rumahnya sendiri |
+
+## Memulai
+
+### Prasyarat
+- Node.js 20+
+- PostgreSQL (atau akun [Neon](https://neon.tech) untuk serverless)
+- Akun [Cloudinary](https://cloudinary.com) untuk file upload
+
+### Instalasi
+
+```bash
+git clone https://github.com/cakapbagus/siparta.git
+cd siparta
+npm install
+```
+
+### Konfigurasi Environment
+
+Buat file `.env` berdasarkan `.env.example`:
+
+```env
+DATABASE_URL="postgresql://..."
+JWT_SECRET="your-secret-key"
+JWT_REFRESH_SECRET="your-refresh-secret"
+CLOUDINARY_CLOUD_NAME="..."
+CLOUDINARY_API_KEY="..."
+CLOUDINARY_API_SECRET="..."
+CRON_SECRET="your-cron-secret"
+```
+
+### Setup Database
+
+```bash
+# Push schema ke database
+npm run db:push
+
+# Atau jalankan migrasi
+npm run db:migrate
+
+# Seed data awal (RW, RT, user pengurus)
+npm run db:seed
+```
+
+### Jalankan Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Struktur Proyek
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/
+│   ├── api/                    # API Routes (backend)
+│   │   ├── auth/               # Login, register, logout, refresh, me
+│   │   ├── iuran/              # Jenis iuran & tagihan
+│   │   ├── pembayaran/         # Submit, verify, manual, history
+│   │   ├── rumah/              # Rumah CRUD + KK + kontrak
+│   │   ├── residents/          # Manajemen akun warga
+│   │   ├── announcements/      # Pengumuman
+│   │   ├── voting/             # Voting & musyawarah
+│   │   ├── kegiatan/           # Jadwal kegiatan + RSVP
+│   │   ├── layanan/            # Permintaan layanan surat
+│   │   ├── kas/                # Kas RT
+│   │   ├── reports/            # Laporan iuran, kas, warga-status
+│   │   ├── pengurus-rw/        # Monitoring RT (RW only)
+│   │   ├── notifications/      # Notifikasi in-app
+│   │   ├── rt-settings/        # Konfigurasi RT (bank, reminder)
+│   │   ├── public/             # Endpoint publik (RW/RT list untuk registrasi)
+│   │   └── cron/reminder/      # Vercel Cron Job endpoint
+│   ├── dashboard/
+│   │   ├── page.tsx            # Dashboard utama (role-based)
+│   │   ├── rt/                 # Halaman Pengurus RT
+│   │   │   ├── iuran/          # Jenis iuran
+│   │   │   ├── tagihan/        # Manajemen tagihan
+│   │   │   ├── pembayaran/     # Verifikasi + input manual
+│   │   │   ├── warga/          # Manajemen akun warga
+│   │   │   ├── rumah/          # Data rumah & KK
+│   │   │   ├── kas/            # Kas RT
+│   │   │   ├── pengumuman/     # Pengumuman
+│   │   │   ├── laporan/        # Laporan status pembayaran
+│   │   │   └── pengaturan/     # Pengaturan RT
+│   │   ├── warga/
+│   │   │   ├── tagihan/        # Lihat tagihan + bayar
+│   │   │   └── history/        # Riwayat pembayaran
+│   │   └── rw/                 # Monitoring Pengurus RW
+│   ├── login/
+│   └── register/
+├── contexts/
+│   └── auth-context.tsx        # Auth state + apiFetch helper
+├── lib/
+│   ├── api-helpers.ts          # requireAuth, requireRole, jsonOk/Err
+│   ├── jwt.ts                  # Sign & verify JWT
+│   ├── prisma.ts               # Prisma client singleton
+│   ├── password.ts             # bcrypt hash & compare
+│   ├── cloudinary-server.ts    # Upload helper
+│   ├── notifications.ts        # Buat notifikasi in-app
+│   ├── tagihan-gen.ts          # Generate tagihan logic
+│   └── pembayaran-service.ts   # Update status tagihan saat pembayaran
+prisma/
+├── schema.prisma               # Schema lengkap
+└── seed.ts                     # Data awal
+vercel.json                     # Cron job config
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment di Vercel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Push ke GitHub
+2. Import project di [vercel.com](https://vercel.com)
+3. Tambahkan semua environment variables
+4. Deploy — `prisma generate` berjalan otomatis via `postinstall`
 
-## Deploy on Vercel
+Cron job reminder sudah dikonfigurasi di `vercel.json` dan memanggil `/api/cron/reminder` setiap hari. Endpoint dilindungi header `CRON_SECRET`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Lisensi
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT

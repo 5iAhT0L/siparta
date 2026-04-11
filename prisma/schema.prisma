@@ -1,0 +1,440 @@
+// SIPARTA — schema per PRD_SIPARTA.md (PostgreSQL / Neon)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- Hierarki ---
+
+model Rw {
+  id        String   @id @default(uuid()) @db.Uuid
+  nama      String   @db.VarChar(100)
+  alamat    String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  rts    Rt[]
+  users  User[]   @relation("RwPengurus")
+
+  @@map("rw")
+}
+
+model Rt {
+  id        String   @id @default(uuid()) @db.Uuid
+  rwId      String   @map("rw_id") @db.Uuid
+  nama      String   @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  rw            Rw             @relation(fields: [rwId], references: [id], onDelete: Cascade)
+  rumah         Rumah[]
+  pengurusUsers User[]         @relation("RtPengurus")
+  settings      RtSettings?
+  jenisIuran    JenisIuran[]
+  tagihan       Tagihan[]
+  announcements Announcement[]
+  voting        Voting[]
+  kas           Kas[]
+  kegiatan      Kegiatan[]
+
+  @@map("rt")
+}
+
+model RtSettings {
+  id                 String   @id @default(uuid()) @db.Uuid
+  rtId               String   @unique @map("rt_id") @db.Uuid
+  /// Hari sebelum jatuh tempo untuk reminder otomatis (bisa beberapa, JSON number[])
+  reminderOffsets    Json     @default("[3,1,0]") @map("reminder_offsets")
+  bankName           String?  @map("bank_name") @db.VarChar(100)
+  bankAccountNumber  String?  @map("bank_account_number") @db.VarChar(50)
+  bankAccountName    String?  @map("bank_account_name") @db.VarChar(200)
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  rt Rt @relation(fields: [rtId], references: [id], onDelete: Cascade)
+
+  @@map("rt_settings")
+}
+
+// --- Users ---
+
+model User {
+  id                 String    @id @default(uuid()) @db.Uuid
+  username           String    @unique @db.VarChar(100)
+  noKtp              String?   @unique @map("no_ktp") @db.VarChar(16)
+  passwordHash       String    @map("password_hash") @db.VarChar(255)
+  role               String    @db.VarChar(20) // pengurus_rt | pengurus_rw | warga
+  status             String    @default("tidak_aktif") @db.VarChar(20) // aktif | tidak_aktif
+  nama               String    @db.VarChar(200)
+  rtId               String?   @map("rt_id") @db.Uuid
+  rwId               String?   @map("rw_id") @db.Uuid
+  rumahId            String?   @map("rumah_id") @db.Uuid
+  kartuKeluargaId    String?   @map("kartu_keluarga_id") @db.Uuid
+  // Pending registration data (diaplikasikan saat diaktifkan pengurus RT)
+  pendingRumahId      String?   @map("pending_rumah_id") @db.Uuid      // rumah sudah ada
+  pendingNomorRumah   String?   @map("pending_nomor_rumah") @db.VarChar(20) // rumah baru
+  pendingTipeHunian   String?   @map("pending_tipe_hunian") @db.VarChar(20)
+  pendingKontak       String?   @map("pending_kontak") @db.VarChar(100)
+  pendingNoKk         String?   @map("pending_no_kk") @db.VarChar(16)
+  pendingNamaKk       String?   @map("pending_nama_kk") @db.VarChar(200)
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  rt              Rt?              @relation("RtPengurus", fields: [rtId], references: [id], onDelete: SetNull)
+  rw              Rw?              @relation("RwPengurus", fields: [rwId], references: [id], onDelete: SetNull)
+  rumah           Rumah?           @relation(fields: [rumahId], references: [id], onDelete: SetNull)
+  kartuKeluarga   KartuKeluarga?   @relation(fields: [kartuKeluargaId], references: [id], onDelete: SetNull)
+
+  refreshTokens        RefreshToken[]
+  pembayaranSubmitted  Pembayaran[]     @relation("PembayaranSubmitted")
+  pembayaranVerified   Pembayaran[]     @relation("PembayaranVerified")
+  kontrakCreated       KontrakRumah[]   @relation("KontrakCreatedBy")
+  announcementsCreated Announcement[]   @relation("AnnouncementAuthor")
+  votingCreated        Voting[]
+  votes                VoteRecord[]
+  kasRecorded          Kas[]            @relation("KasRecordedBy")
+  notifications        Notification[]
+  auditLogs            AuditLog[]
+  kegiatanCreated      Kegiatan[]       @relation("KegiatanCreatedBy")
+  rsvp                 RsvpKegiatan[]
+  layananRequests      LayananRequest[] @relation("LayananUser")
+  layananHandled       LayananRequest[] @relation("LayananHandledBy")
+  verificationAudits   PembayaranVerificationAudit[]
+
+  @@index([rtId])
+  @@index([rumahId])
+  @@map("users")
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  tokenHash  String    @unique @map("token_hash") @db.VarChar(255)
+  expiresAt  DateTime  @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// --- Rumah & KK ---
+
+model Rumah {
+  id          String   @id @default(uuid()) @db.Uuid
+  rtId        String   @map("rt_id") @db.Uuid
+  nomorRumah  String   @map("nomor_rumah") @db.VarChar(50)
+  alamat      String?
+  kontak      String?  @db.VarChar(20)
+  tipeHunian  String   @default("milik") @map("tipe_hunian") @db.VarChar(20) // milik | kontrak
+  status      String   @default("aktif") @db.VarChar(20) // aktif | tidak_aktif
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  rt         Rt              @relation(fields: [rtId], references: [id], onDelete: Cascade)
+  kontrak    KontrakRumah[]
+  kk         KartuKeluarga[]
+  users      User[]
+  tagihan    Tagihan[]
+  pembayaran Pembayaran[]
+  layanan    LayananRequest[]
+
+  @@unique([rtId, nomorRumah])
+  @@map("rumah")
+}
+
+model KontrakRumah {
+  id             String    @id @default(uuid()) @db.Uuid
+  rumahId        String    @map("rumah_id") @db.Uuid
+  namaPenyewa    String    @map("nama_penyewa") @db.VarChar(200)
+  tanggalMulai   DateTime  @map("tanggal_mulai") @db.Date
+  tanggalSelesai DateTime  @map("tanggal_selesai") @db.Date
+  status         String    @default("aktif") @db.VarChar(20) // aktif | selesai
+  catatan        String?
+  createdById    String    @map("created_by") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  rumah     Rumah @relation(fields: [rumahId], references: [id], onDelete: Cascade)
+  createdBy User  @relation("KontrakCreatedBy", fields: [createdById], references: [id])
+
+  @@index([rumahId, status])
+  @@map("kontrak_rumah")
+}
+
+model KartuKeluarga {
+  id                 String   @id @default(uuid()) @db.Uuid
+  rumahId            String   @map("rumah_id") @db.Uuid
+  noKk               String   @unique @map("no_kk") @db.VarChar(16)
+  namaKepalaKeluarga String   @map("nama_kepala_keluarga") @db.VarChar(200)
+  fotoKkUrl          String?  @map("foto_kk_url")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  rumah   Rumah     @relation(fields: [rumahId], references: [id], onDelete: Cascade)
+  users   User[]
+  fotoKtp FotoKtp[]
+
+  @@index([rumahId])
+  @@map("kartu_keluarga")
+}
+
+model FotoKtp {
+  id              String        @id @default(uuid()) @db.Uuid
+  kartuKeluargaId String        @map("kartu_keluarga_id") @db.Uuid
+  url             String
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  kk KartuKeluarga @relation(fields: [kartuKeluargaId], references: [id], onDelete: Cascade)
+
+  @@index([kartuKeluargaId])
+  @@map("foto_ktp")
+}
+
+// --- Iuran ---
+
+model JenisIuran {
+  id          String    @id @default(uuid()) @db.Uuid
+  rtId        String    @map("rt_id") @db.Uuid
+  nama        String    @db.VarChar(100)
+  deskripsi   String?
+  nominal     Decimal   @db.Decimal(15, 2)
+  tipe        String    @db.VarChar(20) // bulanan | insidental
+  jatuhTempo  Int?      @map("jatuh_tempo")
+  deletedAt   DateTime? @map("deleted_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  rt      Rt       @relation(fields: [rtId], references: [id], onDelete: Cascade)
+  tagihan Tagihan[]
+
+  @@index([rtId])
+  @@map("jenis_iuran")
+}
+
+model Tagihan {
+  id                 String    @id @default(uuid()) @db.Uuid
+  rtId               String    @map("rt_id") @db.Uuid
+  rumahId            String    @map("rumah_id") @db.Uuid
+  iuranId            String    @map("iuran_id") @db.Uuid
+  periode            String    @db.VarChar(32)
+  insidentalBatchId  String?   @map("insidental_batch_id") @db.Uuid
+  nominal            Decimal   @db.Decimal(15, 2)
+  status             String    @default("belum_bayar") @db.VarChar(20)
+  jatuhTempo         DateTime? @map("jatuh_tempo") @db.Date
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  rt         Rt          @relation(fields: [rtId], references: [id], onDelete: Cascade)
+  rumah      Rumah       @relation(fields: [rumahId], references: [id], onDelete: Cascade)
+  jenisIuran JenisIuran  @relation(fields: [iuranId], references: [id], onDelete: Restrict)
+  pembayaran Pembayaran[]
+
+  @@unique([rumahId, iuranId, periode])
+  @@index([rtId, periode])
+  @@map("tagihan")
+}
+
+model Pembayaran {
+  id                 String    @id @default(uuid()) @db.Uuid
+  tagihanId          String    @map("tagihan_id") @db.Uuid
+  rumahId            String    @map("rumah_id") @db.Uuid
+  submittedById      String    @map("submitted_by") @db.Uuid
+  inputByPengurus    Boolean   @default(false) @map("input_by_pengurus")
+  nominal            Decimal   @db.Decimal(15, 2)
+  metode             String    @db.VarChar(20)
+  buktiFile          String?   @map("bukti_file") @db.VarChar(500)
+  status             String    @default("pending") @db.VarChar(20)
+  verifiedById       String?   @map("verified_by") @db.Uuid
+  catatan            String?
+  rejectReason       String?   @map("reject_reason")
+  receivedByName     String?   @map("received_by_name") @db.VarChar(200)
+  receivedDate       DateTime? @map("received_date") @db.Date
+  submittedAt        DateTime  @default(now()) @map("submitted_at")
+  verifiedAt         DateTime? @map("verified_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  tagihan     Tagihan @relation(fields: [tagihanId], references: [id], onDelete: Cascade)
+  rumah       Rumah   @relation(fields: [rumahId], references: [id], onDelete: Cascade)
+  submittedBy User    @relation("PembayaranSubmitted", fields: [submittedById], references: [id])
+  verifiedBy  User?   @relation("PembayaranVerified", fields: [verifiedById], references: [id])
+  audits      PembayaranVerificationAudit[]
+  kas         Kas[]
+
+  @@index([status])
+  @@index([tagihanId])
+  @@map("pembayaran")
+}
+
+model PembayaranVerificationAudit {
+  id            String   @id @default(uuid()) @db.Uuid
+  pembayaranId  String   @map("pembayaran_id") @db.Uuid
+  actorId       String   @map("actor_id") @db.Uuid
+  action        String   @db.VarChar(30)
+  note          String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  pembayaran Pembayaran @relation(fields: [pembayaranId], references: [id], onDelete: Cascade)
+  actor      User       @relation(fields: [actorId], references: [id])
+
+  @@index([pembayaranId])
+  @@map("pembayaran_verification_audit")
+}
+
+model Announcement {
+  id          String   @id @default(uuid()) @db.Uuid
+  rtId        String   @map("rt_id") @db.Uuid
+  createdById String  @map("created_by") @db.Uuid
+  title       String   @db.VarChar(255)
+  content     String
+  imageFile   String?  @map("image_file") @db.VarChar(500)
+  postedAt    DateTime @default(now()) @map("posted_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  rt        Rt   @relation(fields: [rtId], references: [id], onDelete: Cascade)
+  createdBy User @relation("AnnouncementAuthor", fields: [createdById], references: [id])
+
+  @@index([rtId])
+  @@map("announcement")
+}
+
+model Voting {
+  id                       String   @id @default(uuid()) @db.Uuid
+  rtId                     String   @map("rt_id") @db.Uuid
+  createdById              String   @map("created_by") @db.Uuid
+  pertanyaan               String
+  opsi                     Json
+  deadline                 DateTime
+  showResultAfterDeadline  Boolean  @default(false) @map("show_result_after_deadline")
+  createdAt                DateTime @default(now()) @map("created_at")
+
+  rt        Rt           @relation(fields: [rtId], references: [id], onDelete: Cascade)
+  createdBy User         @relation(fields: [createdById], references: [id])
+  records   VoteRecord[]
+
+  @@index([rtId])
+  @@map("voting")
+}
+
+model VoteRecord {
+  id          String   @id @default(uuid()) @db.Uuid
+  votingId    String   @map("voting_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  opsiDipilih String   @map("opsi_dipilih") @db.VarChar(255)
+  votedAt     DateTime @default(now()) @map("voted_at")
+
+  voting Voting @relation(fields: [votingId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([votingId, userId])
+  @@map("vote_record")
+}
+
+model Kas {
+  id            String    @id @default(uuid()) @db.Uuid
+  rtId          String    @map("rt_id") @db.Uuid
+  tipe          String    @db.VarChar(20)
+  deskripsi     String    @db.VarChar(255)
+  nominal       Decimal   @db.Decimal(15, 2)
+  kategori      String?   @db.VarChar(100)
+  recordedById  String?   @map("recorded_by") @db.Uuid
+  recordedDate  DateTime  @default(now()) @map("recorded_date") @db.Date
+  pembayaranId  String?   @map("pembayaran_id") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  rt          Rt          @relation(fields: [rtId], references: [id], onDelete: Cascade)
+  recordedBy  User?       @relation("KasRecordedBy", fields: [recordedById], references: [id])
+  pembayaran  Pembayaran? @relation(fields: [pembayaranId], references: [id], onDelete: SetNull)
+
+  @@index([rtId, recordedDate])
+  @@map("kas")
+}
+
+model Kegiatan {
+  id          String   @id @default(uuid()) @db.Uuid
+  rtId        String   @map("rt_id") @db.Uuid
+  createdById String   @map("created_by") @db.Uuid
+  nama        String   @db.VarChar(200)
+  deskripsi   String?
+  tanggal     DateTime @db.Date
+  jam         String?  @db.VarChar(10)
+  lokasi      String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  rt        Rt             @relation(fields: [rtId], references: [id], onDelete: Cascade)
+  createdBy User           @relation("KegiatanCreatedBy", fields: [createdById], references: [id])
+  rsvp      RsvpKegiatan[]
+
+  @@index([rtId])
+  @@map("kegiatan")
+}
+
+model RsvpKegiatan {
+  id         String   @id @default(uuid()) @db.Uuid
+  kegiatanId String   @map("kegiatan_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  hadir      Boolean
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  kegiatan Kegiatan @relation(fields: [kegiatanId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([kegiatanId, userId])
+  @@map("rsvp_kegiatan")
+}
+
+model LayananRequest {
+  id            String    @id @default(uuid()) @db.Uuid
+  rumahId       String    @map("rumah_id") @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  tipe          String    @db.VarChar(30)
+  keterangan    String
+  status        String    @default("proses") @db.VarChar(20)
+  catatanRt     String?   @map("catatan_rt")
+  suratFile     String?   @map("surat_file") @db.VarChar(500)
+  handledById   String?   @map("handled_by") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  rumah     Rumah @relation(fields: [rumahId], references: [id], onDelete: Cascade)
+  user      User  @relation("LayananUser", fields: [userId], references: [id], onDelete: Cascade)
+  handledBy User? @relation("LayananHandledBy", fields: [handledById], references: [id])
+
+  @@index([rumahId])
+  @@map("layanan_request")
+}
+
+model Notification {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  title     String    @db.VarChar(200)
+  body      String
+  type      String?   @db.VarChar(50)
+  link      String?   @db.VarChar(500)
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@map("notification")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  action    String   @db.VarChar(100)
+  resource  String?  @db.VarChar(200)
+  metadata  Json?
+  ip        String?  @db.VarChar(45)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("audit_log")
+}

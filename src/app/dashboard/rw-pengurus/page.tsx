@@ -58,6 +58,7 @@ export default function RwPengurusPage() {
     if (!d.error) { setRts(d.rts ?? []); setList(d.pengurusRt ?? []); }
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { if (!loading && user?.role === "pengurus_rw") load(); }, [user, loading]);
 
   async function angkat(e: FormEvent) {

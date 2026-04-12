@@ -19,6 +19,7 @@ export default function IuranPage() {
   const [jt, setJt]       = useState("");
 
   const load = async () => { const d = await apiFetch("/api/iuran/jenis").then(r => r.json()); setList(Array.isArray(d) ? d : []); };
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { if (!loading && user?.role === "pengurus_rt") load(); }, [user, loading]);
 
   function openCreate() { setEdit(null); setNama(""); setDesk(""); setNom(""); setTipe("bulanan"); setJt(""); setShow(true); setMsg(null); }

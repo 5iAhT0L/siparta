@@ -18,7 +18,7 @@ export default function PengaturanPage() {
         if (!d.error) { setBank(d.bankName ?? ""); setNoRek(d.bankAccountNumber ?? ""); setNamaRek(d.bankAccountName ?? ""); if (Array.isArray(d.reminderOffsets)) setOffsets(d.reminderOffsets.join(",")); }
       });
     }
-  }, [user, loading]);
+  }, [user, loading, apiFetch]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();

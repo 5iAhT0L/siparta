@@ -46,6 +46,7 @@ export default function WargaPage() {
     setPending(Array.isArray(p) ? p : []);
     setRumah(Array.isArray(r) ? r.filter((x: Rumah) => x.status === "aktif") : []);
   }
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { if (!loading && user?.role === "pengurus_rt") load(); }, [user, loading]);
 
   function openCreate() { setEdit(null); setNama(""); setUname(""); setNik(""); setPass(""); setSelRumah(""); setShow(true); setMsg(null); }

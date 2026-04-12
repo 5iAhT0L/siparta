@@ -12,6 +12,7 @@ export default function LaporanPage() {
   const [periode, setPeriode] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; });
 
   const load = async () => { const d = await apiFetch(`/api/reports/warga-status?periode=${periode}`).then(r => r.json()); setRows(Array.isArray(d.tagihan) ? d.tagihan : []); };
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { if (!loading && user?.role === "pengurus_rt") load(); }, [user, loading, periode]);
 
   async function exportCsv() {

@@ -1,7 +1,6 @@
 import { differenceInCalendarDays } from "date-fns";
 import { prisma } from "@/lib/prisma";
 import { jsonErr, jsonOk } from "@/lib/api-helpers";
-import { notifyRtPengurus } from "@/lib/notifications";
 
 /** Vercel Cron — Story 1.6 */
 export async function GET(req: Request) {

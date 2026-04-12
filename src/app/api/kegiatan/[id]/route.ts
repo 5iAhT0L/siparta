@@ -15,9 +15,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  let u;
   try {
-    u = await requireAuth(req);
+    await requireAuth(req);
   } catch {
     return jsonErr("Unauthorized", 401);
   }

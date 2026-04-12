@@ -32,6 +32,7 @@ export default function RwPengaturanPage() {
     setRts(Array.isArray(rtData) ? rtData : []);
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { if (!loading && user?.role === "pengurus_rw") loadAll(); }, [user, loading]);
 
   // ── Submit identitas RW ─────────────────────────────────────────────────

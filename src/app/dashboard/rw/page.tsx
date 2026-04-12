@@ -31,7 +31,7 @@ export default function RwDashboardPage() {
         setData(d.error ? null : d);
       });
     }
-  }, [user, loading]);
+  }, [user, loading, apiFetch]);
 
   async function loadDetail(rtId: string) {
     if (selectedRt === rtId) { setSelectedRt(null); setRtDetail(null); return; }

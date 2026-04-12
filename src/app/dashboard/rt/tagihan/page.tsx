@@ -34,7 +34,18 @@ export default function TagihanPage() {
     setJenis(Array.isArray(j) ? j : []);
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { if (!loading && user?.role === "pengurus_rt") load(); }, [user, loading, periode]);
+
+  // useMemo must be declared before any early return (Rules of Hooks)
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return tagihan;
+    return tagihan.filter(t =>
+      t.rumah.nomorRumah.toLowerCase().includes(q) ||
+      (t.rumah.kk[0]?.namaKepalaKeluarga ?? "").toLowerCase().includes(q)
+    );
+  }, [tagihan, search]);
 
   async function generate(tipe: "bulanan" | "insidental") {
     setBusy(true); setMsg(null);
@@ -69,16 +80,6 @@ export default function TagihanPage() {
   if (user.role !== "pengurus_rt") return <Denied />;
 
   const insidJenis = jenis.filter(j => j.tipe === "insidental");
-
-  // Filter client-side berdasarkan search (nomor rumah atau nama KK)
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return tagihan;
-    return tagihan.filter(t =>
-      t.rumah.nomorRumah.toLowerCase().includes(q) ||
-      (t.rumah.kk[0]?.namaKepalaKeluarga ?? "").toLowerCase().includes(q)
-    );
-  }, [tagihan, search]);
 
   const lunas   = filtered.filter(t => t.status === "lunas").length;
   const belum   = filtered.filter(t => t.status === "belum_bayar").length;

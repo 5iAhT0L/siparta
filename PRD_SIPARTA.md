@@ -3,9 +3,9 @@
 ## SIPARTA - Sistem Informasi Pencatatan RT/RW Terpadu
 
 **Project:** SIPARTA 
-**Version:** 1.9 (MVP)  
+**Version:** 2.0 (Shipped — rilis 1.0 demo)  
 **Date Created:** April 11, 2026  
-**Target Launch:** 1 Week (MVP)  
+**Last Revised:** April 12, 2026 (audit post-implementasi)  
 **Document Owner:** cakapbagus
 
 ---
@@ -402,21 +402,93 @@ Membangun sistem informasi digital yang mengintegrasikan:
 
 **Acceptance Criteria:**
 
-- [ ] Pengurus RT dapat membuat voting (pertanyaan, opsi, deadline)
-- [ ] Warga dapat vote **sekali** per voting — sistem mencegah double vote berdasarkan `user_id`
-- [ ] Hasil voting ditampilkan real-time atau setelah deadline
+- [ ] Pengurus RT dapat membuat voting (pertanyaan, opsi jawaban, deadline)
+- [ ] Pengurus RT dapat mengatur apakah hasil voting **disembunyikan sampai deadline** (`show_result_after_deadline`) — jika `true`, warga hanya lihat hasil setelah deadline lewat
+- [ ] Warga dapat vote **sekali** per voting — sistem mencegah double vote berdasarkan `user_id` (unique constraint `voting_id + user_id`)
+- [ ] Hasil voting ditampilkan real-time (default) atau hanya setelah deadline (jika opsi disembunyikan)
 - [ ] Pengurus RT dapat melihat detail voting (siapa aja yang vote opsi apa)
 
 ---
 
-### 2.3 Non-Goals (Tidak Termasuk MVP)
+##### Story 2.7: Manajemen Dokumen KK & KTP
 
-- **Payment Gateway Integration** – Fase 1 hanya support manual transfer & cash
-- **SMS/Email Notification** – Fase 1 hanya notifikasi in-app (SMS/Email jika budget tersedia)
-- **Mobile App Native** – Fase 1 adalah web-based, responsive untuk mobile
-- **Accounting System** – Hanya pencatatan iuran, bukan full accounting
-- **Multi-bahasa** – Bahasa Indonesia saja untuk MVP
-- **Advanced Analytics/BI** – Hanya laporan basic
+**As a** Pengurus RT  
+**I want to** menyimpan dokumen foto KK dan KTP anggota keluarga  
+**So that** data administrasi warga lengkap secara digital
+
+**Acceptance Criteria:**
+
+- [ ] Pengurus RT dapat upload foto KK (scan/foto fisik kartu keluarga) untuk setiap entri KK
+- [ ] Pengurus RT dapat upload satu atau lebih foto KTP anggota per KK
+- [ ] File disimpan di Cloudinary; URL tersimpan di tabel `foto_ktp` (relasi ke `kartu_keluarga`)
+- [ ] Pengurus RT dapat menghapus foto KTP yang sudah diupload
+- [ ] Field `foto_kk_url` di tabel `kartu_keluarga` menyimpan URL foto scan KK
+
+---
+
+##### Story 2.8: Manajemen Akun Sendiri (Account Settings)
+
+**As a** Pengguna (semua role)  
+**I want to** mengelola profil dan password akun saya sendiri  
+**So that** saya bisa update data diri dan menjaga keamanan akun
+
+**Acceptance Criteria:**
+
+- [ ] Pengguna dapat melihat profil diri sendiri (nama, username, NIK jika warga)
+- [ ] Pengguna dapat mengubah password dengan input password lama + password baru
+- [ ] Halaman `/dashboard/account` tersedia untuk semua role
+- [ ] Sistem validasi: password lama harus benar sebelum ganti password baru
+
+---
+
+##### Story 2.9: Pengurus RW Mengelola Struktur RT & Pengurus
+
+**As a** Pengurus RW  
+**I want to** mengelola daftar RT dan akun pengurus RT di bawah RW saya  
+**So that** struktur organisasi RT/RW tercatat dan dapat diperbarui
+
+**Acceptance Criteria:**
+
+- [ ] Pengurus RW dapat membuat RT baru (nama RT, terhubung ke RW-nya)
+- [ ] Pengurus RW dapat mengedit atau menghapus RT yang berada di bawah RW-nya
+- [ ] Pengurus RW dapat membuat akun pengurus RT baru (nama, username, password awal) dan menugaskannya ke RT tertentu
+- [ ] Pengurus RW dapat mengedit atau menghapus akun pengurus RT
+- [ ] Pengurus RW dapat mengatur informasi RW (nama, alamat) melalui halaman `/dashboard/rw-pengaturan`
+- [ ] Halaman `/dashboard/rw-pengurus` menampilkan daftar semua pengurus RT di bawah RW beserta RT yang dikelola
+
+> **Catatan:** Ini adalah kemampuan administrasi struktural; fitur monitoring iuran (Story 1.7) tetap read-only.
+
+---
+
+##### Story 2.10: Registrasi Warga — Alur Pending KK/Rumah
+
+**As a** Warga yang mendaftar mandiri  
+**I want to** mendaftarkan akun sambil memberikan info rumah/KK  
+**So that** pengurus RT dapat memverifikasi dan menghubungkan akun saya ke data rumah yang benar
+
+**Acceptance Criteria:**
+
+- [ ] Saat registrasi mandiri, warga mengisi: nama, username, NIK, password, pilih RT, lalu **salah satu dari**:
+  - Pilih rumah yang sudah ada (dropdown berdasarkan RT yang dipilih, via endpoint `/api/public/rt/:rtId/rumah`)
+  - Atau input nomor rumah baru (jika rumah belum terdaftar) beserta tipe hunian dan kontak
+- [ ] Warga juga mengisi info KK: nomor KK dan nama kepala keluarga
+- [ ] Data ini disimpan sebagai `pending*` fields di tabel `users` (`pendingRumahId`, `pendingNomorRumah`, `pendingTipeHunian`, `pendingKontak`, `pendingNoKk`, `pendingNamaKk`)
+- [ ] Akun dibuat berstatus `tidak_aktif` — warga tidak bisa login sampai diaktifkan pengurus RT
+- [ ] Saat pengurus RT mengaktifkan akun: sistem otomatis membuat rumah baru (jika nomor rumah baru) atau menggunakan rumah existing, membuat entri KK, lalu menghubungkan user ke rumah dan KK tersebut
+- [ ] Field `pending*` dibersihkan setelah aktivasi
+- [ ] Endpoint publik `/api/public/rw` tersedia untuk mendapatkan daftar RW (tanpa auth), dan `/api/public/rt/:rtId/rumah` untuk mendapatkan daftar rumah per RT
+
+---
+
+### 2.3 Non-Goals (Belum Diimplementasi)
+
+- **Payment Gateway Integration** – Hanya support manual transfer & cash; integrasi bank/QRIS di Phase 3
+- **SMS/Email Notification** – Saat ini hanya notifikasi in-app; SMS/Email di Phase 2 jika budget tersedia
+- **Mobile App Native** – Web-based, responsive mobile; native app di Phase 3
+- **Accounting System** – Hanya pencatatan iuran & kas, bukan full accounting
+- **Multi-bahasa** – Bahasa Indonesia saja
+- **Advanced Analytics/BI** – Hanya laporan basic (iuran summary, kas, warga status, CSV export)
+- **Rate Limiting** – Belum diimplementasi; di-queue untuk Phase 2
 
 ---
 
@@ -498,21 +570,26 @@ RW (1)
 │  │  Tables:                                             │  │
 │  │  ├─ RW (id, nama, ...)                               │  │
 │  │  ├─ RT (id, rw_id, nama, ...)                        │  │
-│  │  ├─ Users (id, username, no_ktp, rumah_id, role, ...)│  │
-│  │  ├─ PengurusRW_RT (pengurus_rw_id, rt_id)            │  │
+│  │  ├─ RtSettings (rt_id, bank_info, reminder_offsets)  │  │
+│  │  ├─ Users (id, username, no_ktp, rumah_id, pending_*)│  │
+│  │  ├─ RefreshTokens (id, user_id, token_hash, exp)     │  │
 │  │  ├─ Rumah (id, rt_id, nomor_rumah, tipe, status)     │  │
-│  │  ├─ KontrakRumah (id, rumah_id, penyewa, tgl_mulai) │  │
-│  │  ├─ KartuKeluarga (id, rumah_id, no_kk, nama_kk)    │  │
+│  │  ├─ KontrakRumah (id, rumah_id, penyewa, tgl_mulai)  │  │
+│  │  ├─ KartuKeluarga (id, rumah_id, no_kk, foto_kk_url) │  │
+│  │  ├─ FotoKtp (id, kartu_keluarga_id, url)             │  │
 │  │  ├─ JenisIuran (id, rt_id, nama, nominal, tipe)      │  │
 │  │  ├─ Tagihan (id, rt_id, rumah_id, iuran_id, status)  │  │
 │  │  ├─ Pembayaran (id, tagihan_id, bukti, status, dll)  │  │
+│  │  ├─ PembayaranVerificationAudit (audit trail)        │  │
 │  │  ├─ Announcement (id, rt_id, admin_id, title, ...)   │  │
-│  │  ├─ Kas (id, rt_id, tipe, deskripsi, nominal)        │  │
+│  │  ├─ Kas (id, rt_id, tipe, deskripsi, pembayaran_id)  │  │
 │  │  ├─ Kegiatan (id, rt_id, nama, tanggal, rsvp data)   │  │
+│  │  ├─ RsvpKegiatan (kegiatan_id, user_id, hadir)       │  │
 │  │  ├─ LayananRequest (id, rumah_id, tipe, status)      │  │
 │  │  ├─ Voting (id, rt_id, pertanyaan, opsi, deadline)   │  │
 │  │  ├─ VoteRecord (id, voting_id, user_id, opsi)        │  │
-│  │  └─ RefreshTokens (id, user_id, token_hash, exp)     │  │
+│  │  ├─ Notification (id, user_id, title, body, read_at) │  │
+│  │  └─ AuditLog (id, user_id, action, resource)         │  │
 │  │                                                      │  │
 │  │  File Storage:                                       │  │
 │  │  └─ Cloudinary (bukti_pembayaran, file_surat)        │  │
@@ -530,13 +607,24 @@ RW (1)
 ```
 POST   /api/auth/login                  - Login (cek status aktif sebelum issue token)
 POST   /api/auth/register               - Registrasi mandiri warga (akun otomatis tidak_aktif)
-POST   /api/auth/logout                 - Logout
+POST   /api/auth/logout                 - Logout (revoke refresh token)
 GET    /api/auth/me                     - Get current user info
+POST   /api/auth/refresh                - Refresh access token menggunakan httpOnly cookie refresh token
 
 GET    /api/residents/pending           - List akun warga menunggu verifikasi (Pengurus RT)
-PUT    /api/residents/:id/activate      - Aktifkan akun warga (Pengurus RT)
+PUT    /api/residents/:id/activate      - Aktifkan akun warga + proses pending KK/rumah (Pengurus RT)
 PUT    /api/residents/:id/deactivate    - Nonaktifkan akun warga (Pengurus RT)
 DELETE /api/residents/:id/reject        - Tolak & hapus pendaftaran (Pengurus RT)
+
+GET    /api/account                     - Get profil akun sendiri (semua role)
+PUT    /api/account                     - Update profil / ganti password (semua role)
+```
+
+#### Public (Tanpa Auth)
+
+```
+GET    /api/public/rw                   - Daftar semua RW (untuk form registrasi)
+GET    /api/public/rt/:rtId/rumah       - Daftar rumah aktif per RT (untuk form registrasi)
 ```
 
 #### Iuran Management
@@ -555,14 +643,17 @@ GET    /api/iuran/tagihan/:id        - Get detail tagihan
 #### Pembayaran
 
 ```
-GET    /api/pembayaran/pending       - List pending pembayaran (Pengurus RT)
-POST   /api/pembayaran/submit        - Submit pembayaran oleh warga (status: pending)
-POST   /api/pembayaran/manual        - Input pembayaran manual oleh Pengurus RT (status: approved langsung)
-GET    /api/pembayaran/history       - History pembayaran (warga: rumahnya; pengurus: semua)
-PUT    /api/pembayaran/:id/verify    - Verify pembayaran (Pengurus RT)
-PUT    /api/pembayaran/:id/reject    - Reject pembayaran (Pengurus RT)
-POST   /api/pembayaran/upload        - Upload bukti pembayaran
+GET    /api/pembayaran/pending              - List pending pembayaran (Pengurus RT)
+POST   /api/pembayaran/submit               - Submit pembayaran oleh warga (status: pending)
+POST   /api/pembayaran/manual               - Input pembayaran manual oleh Pengurus RT (status: approved langsung)
+GET    /api/pembayaran/history              - History pembayaran (warga: rumahnya; pengurus: semua)
+PUT    /api/pembayaran/:id/verify           - Verify pembayaran (Pengurus RT)
+PUT    /api/pembayaran/:id/reject           - Reject pembayaran dengan alasan (Pengurus RT)
+PUT    /api/pembayaran/:id/request-resubmit - Minta warga upload ulang bukti (Pengurus RT)
+POST   /api/pembayaran/upload               - Upload bukti pembayaran ke Cloudinary
 ```
+
+> **Catatan:** Setiap aksi verify/reject/request-resubmit dicatat ke tabel `pembayaran_verification_audit` sebagai audit trail.
 
 #### Laporan & Transparansi
 
@@ -592,18 +683,23 @@ DELETE /api/rumah/:id               - Hapus rumah (Pengurus RT; gagal jika ada t
 POST   /api/rumah/:id/pindah-kepemilikan - Pindah kepemilikan: hapus KK & akun lama, rumah tetap aktif (Pengurus RT)
 ```
 
-#### Kartu Keluarga
+#### Kartu Keluarga & Dokumen
 
 ```
-GET    /api/rumah/:rumah_id/kontrak          - List riwayat kontrak rumah (Pengurus RT)
-POST   /api/rumah/:rumah_id/kontrak          - Tambah kontrak baru (Pengurus RT; gagal jika ada kontrak aktif)
-PUT    /api/rumah/:rumah_id/kontrak/:id      - Edit / perpanjang kontrak (Pengurus RT)
-POST   /api/rumah/:rumah_id/kontrak/:id/akhiri - Akhiri kontrak + kosongkan rumah (nonaktifkan, hapus KK & akun warga)
+GET    /api/rumah/:rumah_id/kontrak              - List riwayat kontrak rumah (Pengurus RT)
+POST   /api/rumah/:rumah_id/kontrak              - Tambah kontrak baru (Pengurus RT; gagal jika ada kontrak aktif)
+PUT    /api/rumah/:rumah_id/kontrak/:id          - Edit / perpanjang kontrak (Pengurus RT)
+POST   /api/rumah/:rumah_id/kontrak/:id/akhiri   - Akhiri kontrak + kosongkan rumah (nonaktifkan, hapus KK & akun warga)
 
 GET    /api/rumah/:rumah_id/kk      - List semua KK dalam satu rumah (Pengurus RT)
 POST   /api/rumah/:rumah_id/kk      - Tambah KK ke rumah (Pengurus RT)
 PUT    /api/kk/:id                  - Edit data KK termasuk pindah rumah (Pengurus RT); jika rumah asal jadi kosong → otomatis tidak_aktif
 DELETE /api/kk/:id                  - Hapus KK + akun warga terhubung (Pengurus RT); jika rumah asal jadi kosong → otomatis tidak_aktif
+
+PUT    /api/kk/:id/foto             - Upload / update foto KK (scan fisik KK) ke Cloudinary
+GET    /api/kk/:id/ktp              - List foto KTP anggota untuk KK tertentu
+POST   /api/kk/:id/ktp              - Upload foto KTP baru untuk anggota KK
+DELETE /api/kk/:id/ktp/:fotoId      - Hapus foto KTP tertentu
 ```
 
 #### Akun Warga
@@ -615,24 +711,48 @@ PUT    /api/residents/:id           - Edit akun warga (Pengurus RT)
 DELETE /api/residents/:id           - Hapus akun warga (Pengurus RT)
 ```
 
+#### RW Management (Pengurus RW)
+
+```
+GET    /api/rw/rt                   - List semua RT di bawah RW sendiri
+POST   /api/rw/rt                   - Buat RT baru di bawah RW sendiri
+PUT    /api/rw/rt/:id               - Edit RT (nama)
+DELETE /api/rw/rt/:id               - Hapus RT (Pengurus RW)
+
+GET    /api/rw/pengurus-rt          - List semua pengurus RT di bawah RW sendiri
+POST   /api/rw/pengurus-rt          - Buat akun pengurus RT baru dan assign ke RT
+PUT    /api/rw/pengurus-rt/:id      - Edit akun pengurus RT
+DELETE /api/rw/pengurus-rt/:id      - Hapus akun pengurus RT
+
+GET    /api/rw/settings             - Get pengaturan RW (nama, alamat)
+PUT    /api/rw/settings             - Update pengaturan RW
+```
+
 ---
 
 ### 3.3.1 Role-Based Access Control (RBAC)
 
-| Feature                  | Pengurus RT (scope: RT sendiri)      | Pengurus RW (scope: RT di bawah RW-nya, read-only) | Warga (scope: data milik sendiri) |
-| ------------------------ | ------------------------------------ | -------------------------------------------------- | --------------------------------- |
-| **Jenis Iuran**          | Create, Read, Update, Delete         | Read Only                                          | Read (Own RT)                     |
-| **Tagihan**              | Create, Read, Update, Delete         | Read Only (RT di bawah RW-nya)                     | Read (Own)                        |
-| **Pembayaran**           | Create, Read, Update, Delete, Verify | Read Only                                          | Submit, View Own                  |
-| **Laporan Keuangan**     | Full Access (RT sendiri)             | Read Only (RT di bawah RW-nya)                     | View Own RT (Limited)             |
-| **Data Warga**           | CRUD (RT sendiri)                    | Read Only (RT di bawah RW-nya)                     | View Own                          |
-| **Pengumuman**           | Create, Update, Delete (RT sendiri)  | Read Only                                          | Read (Own RT)                     |
-| **Kas RT**               | CRUD (RT sendiri)                    | Read Only (RT di bawah RW-nya)                     | Limited View (Own RT)             |
-| **Dashboard Monitoring** | Own RT Only                          | Semua RT di bawah RW-nya                           | Own Data Only                     |
+| Feature                       | Pengurus RT (scope: RT sendiri)      | Pengurus RW (scope: RW sendiri)                       | Warga (scope: data milik sendiri) |
+| ----------------------------- | ------------------------------------ | ----------------------------------------------------- | --------------------------------- |
+| **Jenis Iuran**               | Create, Read, Update, Delete         | Read Only (RT di bawah RW-nya)                        | Read (Own RT)                     |
+| **Tagihan**                   | Create, Read, Update, Delete         | Read Only (RT di bawah RW-nya)                        | Read (Own)                        |
+| **Pembayaran**                | Create, Read, Update, Delete, Verify | Read Only                                             | Submit, View Own                  |
+| **Laporan Keuangan**          | Full Access (RT sendiri)             | Read Only (RT di bawah RW-nya)                        | View Own RT (Limited)             |
+| **Data Warga**                | CRUD (RT sendiri)                    | Read Only (RT di bawah RW-nya)                        | View Own                          |
+| **Pengumuman**                | Create, Update, Delete (RT sendiri)  | Read Only                                             | Read (Own RT)                     |
+| **Kas RT**                    | CRUD (RT sendiri)                    | Read Only (RT di bawah RW-nya)                        | Limited View (Own RT)             |
+| **Dashboard Monitoring**      | Own RT Only                          | Semua RT di bawah RW-nya                              | Own Data Only                     |
+| **Manajemen RT**              | —                                    | Create, Read, Update, Delete (RT di bawah RW-nya)     | —                                 |
+| **Manajemen Pengurus RT**     | —                                    | Create, Read, Update, Delete (pengurus RT di bawah RW)| —                                 |
+| **Pengaturan RW**             | —                                    | Full Access (RW sendiri)                              | —                                 |
+| **Dokumen KK/KTP**            | CRUD (RT sendiri)                    | Read Only                                             | —                                 |
+| **Account Settings**          | Update Own                           | Update Own                                            | Update Own                        |
 
 ---
 
-### 3.4 Database Schema (Simplified)
+### 3.4 Database Schema (Aktual — sesuai Prisma schema)
+
+> Schema SQL di bawah adalah referensi struktural. Schema otoritatif ada di `prisma/schema.prisma`.
 
 ```sql
 -- RW Table
@@ -654,33 +774,42 @@ CREATE TABLE rt (
 -- Users Table
 -- Pengurus RT: role='pengurus_rt', rt_id=RT yang dikelola (wajib), rumah_id=NULL
 -- Pengurus RW: role='pengurus_rw', rw_id=RW yang dikelola (wajib), rt_id=NULL, rumah_id=NULL
--- Warga:       role='warga', rumah_id=rumah yang ditempati (wajib); banyak user bisa di rumah sama
+-- Warga:       role='warga', rumah_id=rumah yang ditempati, kartu_keluarga_id=KK yang terhubung
 -- Login dapat menggunakan username ATAU no_ktp (NIK) — no_ktp wajib untuk role 'warga'
--- Pembayaran tagihan oleh warga manapun dalam satu rumah = pembayaran untuk rumah tersebut
 -- status: 'aktif' = dapat login; 'tidak_aktif' = menunggu verifikasi atau dinonaktifkan pengurus
--- Akun yang dibuat pengurus RT langsung 'aktif'; akun registrasi mandiri mulai sebagai 'tidak_aktif'
+-- pending_* fields: diisi saat registrasi mandiri, diproses saat pengurus RT mengaktifkan akun
 CREATE TABLE users (
   id UUID PRIMARY KEY,
   username VARCHAR(100) UNIQUE NOT NULL,
-  no_ktp VARCHAR(16) UNIQUE,       -- NIK/No. KTP 16 digit; wajib untuk warga (enforce via constraint)
+  nama VARCHAR(200) NOT NULL,
+  no_ktp VARCHAR(16) UNIQUE,       -- NIK/No. KTP 16 digit; wajib untuk warga
   password_hash VARCHAR(255) NOT NULL,
-  role VARCHAR(20) NOT NULL CHECK (role IN ('pengurus_rt', 'pengurus_rw', 'warga')),
-  status VARCHAR(20) NOT NULL DEFAULT 'tidak_aktif' CHECK (status IN ('aktif', 'tidak_aktif')),
-  rt_id UUID REFERENCES rt(id),    -- hanya untuk pengurus_rt
-  rw_id UUID REFERENCES rw(id),    -- hanya untuk pengurus_rw
-  rumah_id UUID,                   -- hanya untuk warga (FK ke rumah, ditambah setelah tabel rumah dibuat)
+  role VARCHAR(20) NOT NULL,       -- 'pengurus_rt' | 'pengurus_rw' | 'warga'
+  status VARCHAR(20) NOT NULL DEFAULT 'tidak_aktif',  -- 'aktif' | 'tidak_aktif'
+  rt_id UUID REFERENCES rt(id),              -- hanya untuk pengurus_rt
+  rw_id UUID REFERENCES rw(id),              -- hanya untuk pengurus_rw
+  rumah_id UUID REFERENCES rumah(id),        -- hanya untuk warga (setelah diaktifkan)
+  kartu_keluarga_id UUID REFERENCES kartu_keluarga(id),  -- warga: KK yang terhubung
+  -- Pending registration fields (diisi saat registrasi mandiri warga)
+  pending_rumah_id UUID,           -- rumah existing yang dipilih (NULL jika rumah baru)
+  pending_nomor_rumah VARCHAR(20), -- nomor rumah baru yang diinput (NULL jika pilih existing)
+  pending_tipe_hunian VARCHAR(20), -- 'milik' | 'kontrak' (untuk rumah baru)
+  pending_kontak VARCHAR(100),     -- kontak rumah baru
+  pending_no_kk VARCHAR(16),       -- nomor KK warga pendaftar
+  pending_nama_kk VARCHAR(200),    -- nama kepala keluarga KK pendaftar
   created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW(),
-  -- Constraint: setiap role wajib memiliki referensi yang sesuai
-  CONSTRAINT chk_role_ref CHECK (
-    (role = 'pengurus_rt' AND rt_id IS NOT NULL AND rw_id IS NULL AND rumah_id IS NULL) OR
-    (role = 'pengurus_rw' AND rw_id IS NOT NULL AND rt_id IS NULL AND rumah_id IS NULL) OR
-    (role = 'warga' AND rumah_id IS NOT NULL AND rt_id IS NULL AND rw_id IS NULL)
-  ),
-  -- no_ktp wajib untuk warga
-  CONSTRAINT chk_warga_ktp CHECK (
-    role != 'warga' OR no_ktp IS NOT NULL
-  )
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- RT Settings (bank info & reminder config per RT)
+CREATE TABLE rt_settings (
+  id UUID PRIMARY KEY,
+  rt_id UUID UNIQUE NOT NULL REFERENCES rt(id),
+  reminder_offsets JSONB NOT NULL DEFAULT '[3,1,0]',  -- hari sebelum jatuh tempo
+  bank_name VARCHAR(100),
+  bank_account_number VARCHAR(50),
+  bank_account_name VARCHAR(200),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Rumah (Houses) Table
@@ -729,12 +858,18 @@ CREATE TABLE kartu_keluarga (
   rumah_id UUID NOT NULL REFERENCES rumah(id),
   no_kk VARCHAR(16) UNIQUE NOT NULL,
   nama_kepala_keluarga VARCHAR(200) NOT NULL,
+  foto_kk_url TEXT,  -- URL Cloudinary untuk scan fisik KK (opsional)
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- FK rumah ke users (ditambahkan setelah tabel rumah dibuat)
-ALTER TABLE users ADD CONSTRAINT fk_users_rumah FOREIGN KEY (rumah_id) REFERENCES rumah(id);
+-- Foto KTP — satu atau lebih foto KTP per KK
+CREATE TABLE foto_ktp (
+  id UUID PRIMARY KEY,
+  kartu_keluarga_id UUID NOT NULL REFERENCES kartu_keluarga(id) ON DELETE CASCADE,
+  url TEXT NOT NULL,    -- URL Cloudinary
+  created_at TIMESTAMP DEFAULT NOW()
+);
 
 -- Jenis Iuran (Types of Contributions)
 -- Setiap jenis iuran terikat ke satu RT (Pengurus RT hanya bisa kelola milik RT-nya sendiri)
@@ -759,9 +894,10 @@ CREATE TABLE tagihan (
   rt_id UUID NOT NULL REFERENCES rt(id),  -- denormalisasi untuk query scope RT lebih cepat
   rumah_id UUID NOT NULL REFERENCES rumah(id),
   iuran_id UUID NOT NULL REFERENCES jenis_iuran(id),
-  periode VARCHAR(7),  -- 'YYYY-MM' untuk iuran bulanan; NULL untuk insidental
+  periode VARCHAR(32),              -- 'YYYY-MM' untuk bulanan; format lain untuk insidental
+  insidental_batch_id UUID,         -- batch ID untuk generate insidental sekaligus (nullable)
   nominal DECIMAL(15,2) NOT NULL,
-  status VARCHAR(20) NOT NULL DEFAULT 'belum_bayar' CHECK (status IN ('belum_bayar', 'lunas')),
+  status VARCHAR(20) NOT NULL DEFAULT 'belum_bayar',  -- 'belum_bayar' | 'lunas'
   jatuh_tempo DATE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
@@ -782,13 +918,26 @@ CREATE TABLE pembayaran (
   submitted_by UUID NOT NULL REFERENCES users(id),  -- warga atau pengurus yang menginput
   input_by_pengurus BOOLEAN NOT NULL DEFAULT FALSE,  -- TRUE = diinput manual oleh pengurus RT
   nominal DECIMAL(15,2) NOT NULL,
-  metode VARCHAR(20) NOT NULL CHECK (metode IN ('transfer_manual', 'cash')),
-  bukti_file VARCHAR(500),  -- file path/URL untuk bukti transfer (NULL jika cash atau input manual)
-  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
-  verified_by UUID REFERENCES users(id),  -- pengurus_rt yang memverifikasi (NULL jika input manual)
+  metode VARCHAR(20) NOT NULL,     -- 'transfer_manual' | 'cash'
+  bukti_file VARCHAR(500),         -- URL Cloudinary bukti transfer (NULL jika cash/manual)
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',  -- 'pending' | 'approved' | 'rejected'
+  verified_by UUID REFERENCES users(id),
   catatan TEXT,
+  reject_reason TEXT,              -- alasan penolakan (diisi saat reject)
+  received_by_name VARCHAR(200),   -- nama pengurus yang menerima (untuk cash manual)
+  received_date DATE,              -- tanggal penerimaan (untuk cash manual)
   submitted_at TIMESTAMP DEFAULT NOW(),
   verified_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Audit trail setiap aksi verifikasi pembayaran
+CREATE TABLE pembayaran_verification_audit (
+  id UUID PRIMARY KEY,
+  pembayaran_id UUID NOT NULL REFERENCES pembayaran(id) ON DELETE CASCADE,
+  actor_id UUID NOT NULL REFERENCES users(id),
+  action VARCHAR(30) NOT NULL,    -- 'verify' | 'reject' | 'request_resubmit'
+  note TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -811,7 +960,7 @@ CREATE TABLE voting (
   rt_id UUID NOT NULL REFERENCES rt(id),
   created_by UUID NOT NULL REFERENCES users(id),
   pertanyaan TEXT NOT NULL,
-  opsi JSONB NOT NULL,             -- array of strings, e.g. ["Setuju", "Tidak Setuju", "Abstain"]
+  opsi JSONB NOT NULL,                           -- array of strings, e.g. ["Setuju", "Tidak Setuju"]
   deadline TIMESTAMP NOT NULL,
   show_result_after_deadline BOOLEAN DEFAULT FALSE,  -- true: hasil hanya tampil setelah deadline
   created_at TIMESTAMP DEFAULT NOW()
@@ -838,16 +987,40 @@ CREATE TABLE refresh_tokens (
 );
 
 -- Kas (Finance Records)
--- Kas terikat ke RT tertentu
+-- Kas terikat ke RT tertentu; pembayaran yang diapprove otomatis buat entri pemasukan
 CREATE TABLE kas (
   id UUID PRIMARY KEY,
-  rt_id UUID NOT NULL REFERENCES rt(id),  -- wajib: kas milik RT tertentu
-  tipe VARCHAR(20) NOT NULL CHECK (tipe IN ('pemasukan', 'pengeluaran')),
+  rt_id UUID NOT NULL REFERENCES rt(id),
+  tipe VARCHAR(20) NOT NULL,       -- 'pemasukan' | 'pengeluaran'
   deskripsi VARCHAR(255) NOT NULL,
   nominal DECIMAL(15,2) NOT NULL,
   kategori VARCHAR(100),
   recorded_by UUID REFERENCES users(id),
   recorded_date DATE DEFAULT CURRENT_DATE,
+  pembayaran_id UUID REFERENCES pembayaran(id) ON DELETE SET NULL,  -- link ke pembayaran jika pemasukan iuran
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Notifikasi in-app per user
+CREATE TABLE notification (
+  id UUID PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(200) NOT NULL,
+  body TEXT NOT NULL,
+  type VARCHAR(50),    -- e.g. 'tagihan_reminder', 'pembayaran_pending', 'akun_pending'
+  link VARCHAR(500),   -- URL halaman terkait
+  read_at TIMESTAMP,   -- NULL = belum dibaca
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Audit log sistem (aksi user dicatat untuk kepatuhan)
+CREATE TABLE audit_log (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  action VARCHAR(100) NOT NULL,
+  resource VARCHAR(200),
+  metadata JSONB,
+  ip VARCHAR(45),
   created_at TIMESTAMP DEFAULT NOW()
 );
 ```
@@ -934,41 +1107,55 @@ Login Flow:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│ PHASE 1: MVP (Week 1)                                               │
+│ PHASE 1: MVP — SHIPPED (rilis 1.0 demo, April 2026)                 │
 ├─────────────────────────────────────────────────────────────────────┤
-│ ✓ Fitur Iuran (jenis, tagihan, pembayaran, verifikasi)              │
-│ ✓ Dashboard Pengurus RT & Warga                                     │
-│ ✓ Laporan basic & export CSV                                        │
-│ ✓ Authentication & basic authorization                              │
-│ ✓ Basic announcement feature                                        │
-│ ✓ Data Warga management                                             │
-│ ✓ Kas RT feature (pemasukan, pengeluaran, transparansi)             │
-│ Target: Deploy to untuk testing                                     │
+│ ✅ Fitur Iuran (jenis, tagihan generate bulanan+insidental)          │
+│ ✅ Pembayaran warga (submit + upload bukti), verifikasi pengurus RT  │
+│ ✅ Input pembayaran manual oleh pengurus RT (langsung approved)      │
+│ ✅ Audit trail verifikasi pembayaran                                 │
+│ ✅ Dashboard Pengurus RT & Warga (role-based)                        │
+│ ✅ Laporan iuran, kas, warga-status + export CSV                     │
+│ ✅ Authentication JWT + refresh token + httpOnly cookie              │
+│ ✅ Pengumuman RT                                                     │
+│ ✅ Manajemen data warga (CRUD, pending approval, aktivasi)           │
+│ ✅ Manajemen rumah (CRUD, tipe milik/kontrak, pindah kepemilikan)   │
+│ ✅ Manajemen KK + kontrak rumah + akhiri kontrak                    │
+│ ✅ Upload foto KK + foto KTP per anggota                            │
+│ ✅ Kas RT (pemasukan otomatis dari pembayaran, pengeluaran manual)   │
+│ ✅ Notifikasi in-app                                                 │
+│ ✅ Cron reminder jatuh tempo (/api/cron/reminder)                   │
+│ ✅ Dashboard Pengurus RW (monitoring read-only per RT)               │
+│ ✅ RW manage RT & pengurus RT (CRUD)                                 │
+│ ✅ Account settings (update profil & ganti password, semua role)     │
+│ ✅ Registrasi warga dengan pending KK/rumah flow                    │
+│ ✅ Pengaturan RT (bank info, reminder offsets)                       │
+│ ✅ Layanan surat (request, proses, upload surat selesai)             │
+│ ✅ Jadwal kegiatan + RSVP                                            │
+│ ✅ Voting/musyawarah digital (dengan opsi show_result_after_deadline)│
+│ Status: Deployed untuk demo                                          │
 └─────────────────────────────────────────────────────────────────────┘
                                   │
                         Feedback & Bug Fix
                                   │
 ┌─────────────────────────────────▼───────────────────────────────────┐
-│ PHASE 2: Rollout + Additional Features (Week 2-3)                   │
+│ PHASE 2: Rollout ke 10 RT + Penyempurnaan (Post-Demo)               │
 ├─────────────────────────────────────────────────────────────────────┤
-│ ✓ Extended announcement feature                                     │
-│ ✓ Service request feature (surat domisili, pengantar)               │
-│ ✓ Jadwal kegiatan & RSVP                                            │
-│ ✓ Voting/musyawarah digital                                         │
-│ ✓ Training & documentation untuk pengurus & warga                   │
-│ ✓ Email/SMS reminder setup (if budget allows)                       │
-│ Target: Full rollout, semua RT menggunakan sistem                   │
+│ □ Training & dokumentasi untuk pengurus & warga                     │
+│ □ Bug fix dari feedback demo                                         │
+│ □ Email/SMS reminder setup (jika budget tersedia)                   │
+│ □ Rate limiting pada login endpoint                                  │
+│ Target: Full rollout ke 10 RT                                        │
 └─────────────────────────────────────────────────────────────────────┘
                                   │
                       Monitoring & Optimization
                                   │
 ┌─────────────────────────────────▼───────────────────────────────────┐
-│ PHASE 3: Enhancement (Week 4+)                                      │
+│ PHASE 3: Enhancement (Future)                                        │
 ├─────────────────────────────────────────────────────────────────────┤
-│ ✓ Payment gateway integration (bank / e-wallet / qris)              │
-│ ✓ Mobile app native (iOS/Android)                                   │
-│ ✓ Advanced analytics & reporting                                    │
-│ Target: Full-featured system, scale to more RW/district             │
+│ □ Payment gateway integration (bank / e-wallet / QRIS)              │
+│ □ Mobile app native (iOS/Android)                                    │
+│ □ Advanced analytics & reporting                                     │
+│ Target: Full-featured system, scale ke lebih banyak RW               │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -1064,3 +1251,4 @@ Login Flow:
 | 1.7 | 11 Apr 2026 | cakapbagus | Detail skenario pindah KK: A (pindah intra-RT via edit KK), B (keluar RT via hapus KK); keduanya otomatis nonaktifkan rumah asal jika jadi kosong; Skenario C (pecah KK) diabaikan di MVP |
 | 1.8 | 11 Apr 2026 | cakapbagus | Registrasi mandiri warga dengan approval flow; kolom status pada users (tidak_aktif default); akun dibuat pengurus langsung aktif; login blokir akun tidak_aktif |
 | 1.9 | 11 Apr 2026 | cakapbagus | Revisi hierarki RW→RT: standarisasi terminologi Pengurus RW, perbaikan database schema (rt_id pada semua tabel, role enum, constraint scope), klarifikasi RBAC scoping per RT |
+| 2.0 | 12 Apr 2026 | cakapbagus | Audit seluruh project dan revisi gap PRD |

@@ -26,6 +26,7 @@ export default function VerifikasiPage() {
     setList(Array.isArray(data) ? data : []);
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { if (!loading && user?.role === "pengurus_rt") refresh(); }, [user, loading]);
 
   async function verify(id: string, action: "approve" | "reject") {

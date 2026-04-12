@@ -97,6 +97,7 @@ function FotoKkUploader({ kk, onDone }: { kk: KK; onDone: (url: string | null) =
       {displayUrl ? (
         <div className="rounded-lg overflow-hidden border" style={{ borderColor: "var(--border-muted)" }}>
           <a href={displayUrl} target="_blank" rel="noreferrer">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={displayUrl} alt="Foto KK" className="w-full max-h-40 object-contain block"
               style={{ background: "var(--surface-2)" }} />
           </a>
@@ -191,6 +192,7 @@ function FotoKtpManager({ kkId }: { kkId: string }) {
                 <div key={f.id} className="relative rounded-lg overflow-hidden border group"
                   style={{ borderColor: "var(--border-muted)", aspectRatio: "1" }}>
                   <a href={f.url} target="_blank" rel="noreferrer">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={f.url} alt={`KTP ${i + 1}`}
                       className="w-full h-full object-cover block"
                       style={{ background: "var(--surface-2)" }}
@@ -254,6 +256,7 @@ export default function RumahPage() {
   const load    = async () => { const d = await apiFetch("/api/rumah").then(r => r.json()); setList(Array.isArray(d) ? d : []); };
   const loadKk  = async (id: string) => { const d = await apiFetch(`/api/rumah/${id}/kk`).then(r => r.json()); setKkList(Array.isArray(d) ? d : []); };
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { if (!loading && user?.role === "pengurus_rt") load(); }, [user, loading]);
 
   function openCreate() { setEdit(null); setNoRumah(""); setAlamat(""); setKontak(""); setTipe("milik"); setStatus("aktif"); setShow(true); setMsg(null); }

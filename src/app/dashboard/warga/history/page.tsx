@@ -28,7 +28,7 @@ export default function WargaHistoryPage() {
         setHistory(Array.isArray(d) ? d : []);
       });
     }
-  }, [user, loading]);
+  }, [user, loading, apiFetch]);
 
   if (loading || !user) return <Loader />;
   if (user.role !== "warga") return <Denied />;

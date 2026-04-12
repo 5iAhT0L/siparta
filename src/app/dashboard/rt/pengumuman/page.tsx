@@ -16,6 +16,7 @@ export default function PengumumanPage() {
   const [body, setBody]   = useState("");
 
   const load = async () => { const d = await apiFetch("/api/announcements").then(r => r.json()); setList(Array.isArray(d) ? d : []); };
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { if (!loading && user?.role === "pengurus_rt") load(); }, [user, loading]);
 
   function openCreate() { setEdit(null); setTitle(""); setBody(""); setShow(true); setMsg(null); }

@@ -18,6 +18,7 @@ export default function KasPage() {
   const [kat, setKat]       = useState("");
 
   const load = async () => { const d = await apiFetch(`/api/reports/kas?bulan=${bulan}`).then(r => r.json()); setData(d.error ? null : d); };
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { if (!loading && user?.role === "pengurus_rt") load(); }, [user, loading, bulan]);
 
   async function onSubmit(e: FormEvent) {

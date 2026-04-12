@@ -25,20 +25,23 @@ export default function PembayaranPage() {
   const loadPending = async () => { const d = await apiFetch("/api/pembayaran/pending").then(r => r.json()); setPending(Array.isArray(d) ? d : []); };
   const loadRumah   = async () => { const d = await apiFetch("/api/rumah").then(r => r.json()); setRumahList(Array.isArray(d) ? d.filter((r: Rumah) => r.status === "aktif") : []); };
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
   useEffect(() => { if (!loading && user?.role === "pengurus_rt") { loadPending(); loadRumah(); } }, [user, loading]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!selRumah) { setTagihanList([]); setSelTagihan(""); return; }
     apiFetch(`/api/iuran/tagihan?rumahId=${selRumah}`).then(r => r.json()).then(d => {
       setTagihanList(Array.isArray(d) ? d.filter((t: Tagihan) => t.status !== "lunas") : []);
     });
     setSelTagihan("");
-  }, [selRumah]);
+  }, [selRumah, apiFetch]);
 
   useEffect(() => {
     const t = tagihanList.find(t => t.id === selTagihan);
     if (t) setNominal(String(t.nominal));
-  }, [selTagihan]);
+  }, [selTagihan, tagihanList]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   async function verify(id: string, action: "approve" | "reject") {
     setMsg(null);
@@ -125,7 +128,7 @@ export default function PembayaranPage() {
                 </div>
                 {p.buktiFile && <a href={p.buktiFile} target="_blank" rel="noreferrer" className="text-xs font-medium flex-shrink-0" style={{ color: "var(--primary)" }}>Lihat bukti ↗</a>}
               </div>
-              {p.catatan && <div className="mt-1 text-xs" style={{ color: "var(--text-subtle)" }}>"{p.catatan}"</div>}
+              {p.catatan && <div className="mt-1 text-xs" style={{ color: "var(--text-subtle)" }}>&ldquo;{p.catatan}&rdquo;</div>}
               <div className="mt-3 flex gap-2">
                 <button type="button" onClick={() => verify(p.id, "approve")} className="btn-primary" style={{ fontSize: "0.75rem", padding: "0.375rem 0.75rem" }}>Setujui</button>
                 <button type="button" onClick={() => verify(p.id, "reject")} className="btn-danger" style={{ fontSize: "0.75rem", padding: "0.375rem 0.75rem" }}>Tolak</button>

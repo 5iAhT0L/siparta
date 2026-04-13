@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 
 type RwRow = { id: string; nama: string; rts: { id: string; nama: string }[] };
 type RumahRow = { id: string; nomorRumah: string };
@@ -89,6 +91,8 @@ function PwInput({
 const NEW_ROOM_VALUE = "__new__";
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const [rwList, setRwList] = useState<RwRow[]>([]);
   const [rtId, setRtId] = useState("");
   const [rumahList, setRumahList] = useState<RumahRow[]>([]);
@@ -112,6 +116,14 @@ export default function RegisterPage() {
 
   const isNewRoom = rumahSel === NEW_ROOM_VALUE;
 
+  // Redirect jika user tidak authenticated atau bukan admin
+  useEffect(() => {
+    if (loading) return;
+    if (!user || (user.role !== "pengurus_rt" && user.role !== "pengurus_rw")) {
+      router.push("/login");
+    }
+  }, [user, loading, router]);
+
   useEffect(() => {
     setLoadingRw(true);
     setRwError(null);
@@ -131,7 +143,22 @@ export default function RegisterPage() {
           setRwList([]);
           return;
         }
-        setRwList(data);
+        // Filter RW jika user adalah pengurus_rt
+        let filtered = data;
+        if (user?.role === "pengurus_rt" && user?.rtId) {
+          filtered = data
+            .map((rw) => ({
+              ...rw,
+              rts: rw.rts.filter((rt: any) => rt.id === user.rtId),
+            }))
+            .filter((rw) => rw.rts.length > 0);
+
+          // Jika user adalah pengurus_rt, set RT mereka secara otomatis
+          if (filtered.length > 0 && filtered[0].rts.length > 0 && !rtId) {
+            setRtId(filtered[0].rts[0].id);
+          }
+        }
+        setRwList(filtered);
         setRwError(null);
       })
       .catch((err) => {
@@ -140,7 +167,7 @@ export default function RegisterPage() {
         setRwList([]);
       })
       .finally(() => setLoadingRw(false));
-  }, []);
+  }, [user, rtId]);
 
   useEffect(() => {
     if (!rtId) {
@@ -222,6 +249,39 @@ export default function RegisterPage() {
     }
   }
 
+  if (loading) {
+    return (
+      <div
+        style={{
+          minHeight: "100dvh",
+          background: "var(--bg)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              border: "3px solid var(--border)",
+              borderTopColor: "var(--primary)",
+              borderRadius: "50%",
+              animation: "spin 0.6s linear infinite",
+              margin: "0 auto",
+            }}
+          />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || (user.role !== "pengurus_rt" && user.role !== "pengurus_rw")) {
+    return null; // Will redirect in useEffect
+  }
+
   const L: React.CSSProperties = {
     fontSize: "0.875rem",
     fontWeight: 500,
@@ -290,21 +350,21 @@ export default function RegisterPage() {
             {message}
           </p>
           <Link
-            href="/login"
+            href="/dashboard"
             className="btn-primary"
             style={{ display: "inline-flex" }}
           >
-            Masuk ke Akun
+            Kembali ke Dashboard
           </Link>
           <p className="text-xs mt-3">
             <Link
-              href="/"
+              href="/dashboard"
               style={{
                 color: "var(--text-subtle)",
                 textDecoration: "underline",
               }}
             >
-              ← Beranda
+              ← Kembali ke Dashboard
             </Link>
           </p>
         </div>
@@ -355,10 +415,12 @@ export default function RegisterPage() {
             className="font-bold"
             style={{ fontSize: "1.25rem", color: "var(--text)" }}
           >
-            Registrasi Warga
+            Pendaftaran Warga Baru
           </div>
           <div className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
-            Akun aktif setelah diverifikasi pengurus RT
+            {user?.role === "pengurus_rt"
+              ? `Kelola warga di RT Anda`
+              : `Kelola pendaftaran warga se-RW`}
           </div>
         </div>
 
@@ -411,6 +473,7 @@ export default function RegisterPage() {
                       value={rtId}
                       onChange={(e) => setRtId(e.target.value)}
                       required
+                      disabled={user?.role === "pengurus_rt"}
                     >
                       <option value="">— Pilih RW / RT —</option>
                       {rwList.flatMap((rw) =>

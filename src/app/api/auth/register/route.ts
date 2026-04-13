@@ -2,29 +2,53 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
 import { notifyRtPengurus } from "@/lib/notifications";
-import { jsonErr, jsonOk } from "@/lib/api-helpers";
+import { jsonErr, jsonOk, requireRole } from "@/lib/api-helpers";
 
-const schema = z.object({
-  rtId:               z.string().uuid(),
-  rumahId:            z.string().uuid().optional(),       // rumah sudah ada
-  nomorRumah:         z.string().min(1).max(20).optional(), // rumah baru
-  tipeHunian:         z.enum(["milik", "kontrak"]).default("milik"),
-  kontak:             z.string().max(100).optional(),     // opsional, untuk rumah baru
-  noKk:               z.string().regex(/^\d{16}$/, "No. KK harus 16 digit"),
-  namaKepalaKeluarga: z.string().min(2).max(200),
-  nama:               z.string().min(2).max(200),
-  username:           z.string().min(3).max(100),
-  noKtp:              z.string().regex(/^\d{16}$/, "NIK harus 16 digit"),
-  password:           z.string().min(8),
-}).refine(d => d.rumahId || d.nomorRumah, { message: "Pilih rumah atau isi nomor rumah baru" });
+const schema = z
+  .object({
+    rtId: z.string().uuid(),
+    rumahId: z.string().uuid().optional(), // rumah sudah ada
+    nomorRumah: z.string().min(1).max(20).optional(), // rumah baru
+    tipeHunian: z.enum(["milik", "kontrak"]).default("milik"),
+    kontak: z.string().max(100).optional(), // opsional, untuk rumah baru
+    noKk: z.string().regex(/^\d{16}$/, "No. KK harus 16 digit"),
+    namaKepalaKeluarga: z.string().min(2).max(200),
+    nama: z.string().min(2).max(200),
+    username: z.string().min(3).max(100),
+    noKtp: z.string().regex(/^\d{16}$/, "NIK harus 16 digit"),
+    password: z.string().min(8),
+  })
+  .refine((d) => d.rumahId || d.nomorRumah, {
+    message: "Pilih rumah atau isi nomor rumah baru",
+  });
 
 export async function POST(req: Request) {
+  // Hanya admin (pengurus RT/RW) yang bisa mendaftarkan warga
+  const admin = await requireRole(req, ["pengurus_rt", "pengurus_rw"]).catch(
+    () => null,
+  );
+  if (!admin) {
+    return jsonErr("Hanya admin yang bisa mendaftarkan warga", 403);
+  }
+
   let data: z.infer<typeof schema>;
   try {
     data = schema.parse(await req.json());
   } catch (e) {
-    const msg = e instanceof z.ZodError ? e.issues[0]?.message : "Data tidak valid";
+    const msg =
+      e instanceof z.ZodError ? e.issues[0]?.message : "Data tidak valid";
     return jsonErr(String(msg ?? "Data tidak valid"), 400);
+  }
+
+  // Validasi akses RT berdasarkan role admin
+  if (admin.role === "pengurus_rt" && admin.rtId !== data.rtId) {
+    return jsonErr("Anda hanya bisa mendaftarkan warga di RT Anda", 403);
+  }
+  if (admin.role === "pengurus_rw" && admin.rwId) {
+    const rt = await prisma.rt.findUnique({ where: { id: data.rtId } });
+    if (!rt || rt.rwId !== admin.rwId) {
+      return jsonErr("RT tidak ditemukan di RW Anda", 403);
+    }
   }
 
   const rt = await prisma.rt.findUnique({ where: { id: data.rtId } });
@@ -36,19 +60,24 @@ export async function POST(req: Request) {
   if (existsUser) return jsonErr("Username atau NIK sudah terdaftar", 409);
 
   // Cek no KK tidak duplikat (di pending maupun yang sudah terdaftar)
-  const existsKk = await prisma.kartuKeluarga.findFirst({ where: { noKk: data.noKk } });
+  const existsKk = await prisma.kartuKeluarga.findFirst({
+    where: { noKk: data.noKk },
+  });
   if (existsKk) return jsonErr("No. KK sudah terdaftar", 409);
 
   const pendingKk = await prisma.$queryRaw<{ count: bigint }[]>`
     SELECT COUNT(*)::bigint as count FROM users WHERE pending_no_kk = ${data.noKk}
   `;
-  if (Number(pendingKk[0]?.count) > 0) return jsonErr("No. KK sudah digunakan oleh pendaftar lain", 409);
+  if (Number(pendingKk[0]?.count) > 0)
+    return jsonErr("No. KK sudah digunakan oleh pendaftar lain", 409);
 
   const passwordHash = await hashPassword(data.password);
 
   if (data.rumahId) {
     // ── Rumah sudah ada: simpan pending_rumah_id, KK dibuat saat diaktifkan ──
-    const rumah = await prisma.rumah.findFirst({ where: { id: data.rumahId, rtId: data.rtId } });
+    const rumah = await prisma.rumah.findFirst({
+      where: { id: data.rumahId, rtId: data.rtId },
+    });
     if (!rumah) return jsonErr("Rumah tidak ditemukan di RT ini", 400);
 
     await prisma.$executeRaw`
@@ -59,9 +88,12 @@ export async function POST(req: Request) {
               ${data.rumahId}::uuid, ${data.noKk}, ${data.namaKepalaKeluarga}, now())
     `;
 
-    await notifyRtPengurus(data.rtId, "Pendaftaran warga baru",
-      `${data.nama} mendaftar untuk rumah ${rumah.nomorRumah}.`, "/dashboard/rt/warga").catch(() => {});
-
+    await notifyRtPengurus(
+      data.rtId,
+      "Pendaftaran warga baru",
+      `${data.nama} mendaftar untuk rumah ${rumah.nomorRumah}.`,
+      "/dashboard/rt/warga",
+    ).catch(() => {});
   } else {
     // ── Rumah baru: simpan semua pending, dibuat saat diaktifkan ──
     const kontak = data.kontak?.trim() || null;
@@ -76,11 +108,16 @@ export async function POST(req: Request) {
               ${data.noKk}, ${data.namaKepalaKeluarga}, now())
     `;
 
-    await notifyRtPengurus(data.rtId, "Pendaftaran warga baru (rumah baru)",
-      `${data.nama} mendaftar dengan rumah baru No. ${data.nomorRumah}.`, "/dashboard/rt/warga").catch(() => {});
+    await notifyRtPengurus(
+      data.rtId,
+      "Pendaftaran warga baru (rumah baru)",
+      `${data.nama} mendaftar dengan rumah baru No. ${data.nomorRumah}.`,
+      "/dashboard/rt/warga",
+    ).catch(() => {});
   }
 
   return jsonOk({
-    message: "Registrasi berhasil. Akun Anda menunggu verifikasi pengurus RT sebelum dapat login.",
+    message:
+      "Registrasi berhasil. Akun Anda menunggu verifikasi pengurus RT sebelum dapat login.",
   });
 }

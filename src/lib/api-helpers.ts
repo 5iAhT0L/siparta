@@ -3,10 +3,17 @@ import { verifyAccessToken, type AccessPayload } from "@/lib/jwt";
 import { prisma } from "@/lib/prisma";
 
 export function jsonOk<T>(data: T, init?: number | ResponseInit) {
-  return NextResponse.json(data, typeof init === "number" ? { status: init } : init);
+  return NextResponse.json(
+    data,
+    typeof init === "number" ? { status: init } : init,
+  );
 }
 
-export function jsonErr(message: string, status = 400, extra?: Record<string, unknown>) {
+export function jsonErr(
+  message: string,
+  status = 400,
+  extra?: Record<string, unknown>,
+) {
   return NextResponse.json({ error: message, ...extra }, { status });
 }
 
@@ -16,7 +23,9 @@ export function getBearerToken(req: Request): string | null {
   return h.slice(7).trim() || null;
 }
 
-export async function getAccessPayload(req: Request): Promise<AccessPayload | null> {
+export async function getAccessPayload(
+  req: Request,
+): Promise<AccessPayload | null> {
   const token = getBearerToken(req);
   if (!token) return null;
   try {
@@ -61,7 +70,10 @@ export async function requireAuth(req: Request): Promise<SessionUser> {
   return user;
 }
 
-export async function requireRole(req: Request, roles: string[]): Promise<SessionUser> {
+export async function requireRole(
+  req: Request,
+  roles: string[],
+): Promise<SessionUser> {
   const u = await requireAuth(req);
   if (!roles.includes(u.role)) {
     throw Object.assign(new Error("Forbidden"), { status: 403 });
@@ -79,7 +91,11 @@ export function clientIp(req: Request): string {
 
 const loginAttempts = new Map<string, { n: number; reset: number }>();
 
-export function rateLimitLogin(ip: string, max = 5, windowMs = 15 * 60 * 1000): boolean {
+export function rateLimitLogin(
+  ip: string,
+  max = 20,
+  windowMs = 15 * 60 * 1000,
+): boolean {
   const now = Date.now();
   const cur = loginAttempts.get(ip);
   if (!cur || now > cur.reset) {
@@ -93,4 +109,8 @@ export function rateLimitLogin(ip: string, max = 5, windowMs = 15 * 60 * 1000): 
 
 export function resetRateLimit(ip: string): void {
   loginAttempts.delete(ip);
+}
+
+export function clearAllRateLimits(): void {
+  loginAttempts.clear();
 }

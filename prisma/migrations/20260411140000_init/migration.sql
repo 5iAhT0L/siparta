@@ -57,7 +57,7 @@ CREATE TABLE "users" (
 CREATE TABLE "refresh_tokens" (
     "id" UUID NOT NULL,
     "user_id" UUID NOT NULL,
-    "token_hash" VARCHAR(255) NOT NULL,
+    "token_hash" VARCHAR(255) NOT NULL,x
     "expires_at" TIMESTAMP(3) NOT NULL,
     "revoked_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

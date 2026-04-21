@@ -99,30 +99,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "var(--bg)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1.5rem 1rem",
-      }}
-    >
-      <div style={{ width: "100%", maxWidth: 400 }}>
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 48,
-              height: 48,
-              borderRadius: 14,
-              background: "var(--primary)",
-              marginBottom: "0.875rem",
-            }}
-          >
+    <div className="min-h-screen bg-bg flex items-center justify-center px-4 py-6">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary mb-3.5">
             <svg
               width="24"
               height="24"
@@ -137,13 +117,8 @@ export default function LoginPage() {
               <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
           </div>
-          <div
-            className="font-bold"
-            style={{ fontSize: "1.25rem", color: "var(--text)" }}
-          >
-            Masuk SIPARTA
-          </div>
-          <div className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
+          <div className="font-bold text-xl text-text">Masuk SIPARTA</div>
+          <div className="text-sm mt-1 text-text-muted">
             Sistem Informasi RT/RW Terpadu
           </div>
         </div>
@@ -151,27 +126,12 @@ export default function LoginPage() {
         <div className="card">
           <form onSubmit={onSubmit} className="space-y-4">
             {/* Demo account picker */}
-            <div
-              style={{
-                background: "var(--surface-2)",
-                border: "1.5px solid var(--border)",
-                borderRadius: 10,
-                padding: "0.75rem",
-              }}
-            >
-              <label
-                className="text-xs font-semibold"
-                style={{
-                  color: "var(--primary-dark)",
-                  display: "block",
-                  marginBottom: "0.5rem",
-                }}
-              >
+            <div className="bg-surface-2 border-1.5 border-border rounded-2xl px-3 py-3">
+              <label className="text-xs font-semibold text-primary-dark block mb-2">
                 Akun Demo
               </label>
               <select
-                className="input"
-                style={{ fontSize: "0.8125rem" }}
+                className="input text-xs"
                 defaultValue=""
                 onChange={(e) => pickDemo(e.target.value)}
               >
@@ -184,31 +144,14 @@ export default function LoginPage() {
                   </option>
                 ))}
               </select>
-              <div
-                className="text-xs mt-1.5"
-                style={{ color: "var(--text-subtle)" }}
-              >
+              <div className="text-xs mt-3 text-text-subtle">
                 Semua akun demo menggunakan password:{" "}
-                <span
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    color: "var(--text-muted)",
-                  }}
-                >
-                  demo123
-                </span>
+                <span className="font-mono text-text-muted">demo123</span>
               </div>
             </div>
 
             <div>
-              <label
-                className="text-sm font-medium"
-                style={{
-                  color: "var(--text)",
-                  display: "block",
-                  marginBottom: 4,
-                }}
-              >
+              <label className="text-sm font-medium text-text block mb-1">
                 Username atau NIK
               </label>
               <input
@@ -221,42 +164,23 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label
-                className="text-sm font-medium"
-                style={{
-                  color: "var(--text)",
-                  display: "block",
-                  marginBottom: 4,
-                }}
-              >
+              <label className="text-sm font-medium text-text block mb-1">
                 Password
               </label>
-              <div style={{ position: "relative" }}>
+              <div className="relative">
                 <input
                   type={showPw ? "text" : "password"}
-                  className="input"
+                  className="input pr-10"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
                   required
                   placeholder="••••••••"
-                  style={{ paddingRight: "2.5rem" }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPw((p) => !p)}
-                  style={{
-                    position: "absolute",
-                    right: "0.6rem",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    color: "var(--text-subtle)",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 0,
-                    lineHeight: 1,
-                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-text-subtle bg-none border-0 cursor-pointer p-0 leading-none transition-all hover:text-text"
                 >
                   {showPw ? (
                     <svg
@@ -292,10 +216,7 @@ export default function LoginPage() {
               </div>
             </div>
             {error && (
-              <div
-                className="text-sm rounded px-3 py-2"
-                style={{ background: "#fef2f2", color: "var(--danger)" }}
-              >
+              <div className="text-sm rounded px-3 py-2 bg-red-50 text-danger">
                 {error}
               </div>
             )}
@@ -303,21 +224,17 @@ export default function LoginPage() {
               type="submit"
               disabled={pending}
               className="btn-primary w-full justify-center"
-              style={{ width: "100%" }}
             >
               {pending ? "Memproses…" : "Masuk"}
             </button>
           </form>
         </div>
 
-        <p
-          className="text-center text-sm mt-4"
-          style={{ color: "var(--text-muted)" }}
-        >
+        <p className="text-center text-sm mt-4 text-text-muted">
           Belum punya akun?{" "}
           <Link
             href="/register"
-            style={{ color: "var(--primary)", textDecoration: "underline" }}
+            className="text-primary underline transition-colors hover:text-primary-dark"
           >
             Registrasi Warga
           </Link>
@@ -325,7 +242,7 @@ export default function LoginPage() {
         <p className="text-center text-xs mt-2">
           <Link
             href="/"
-            style={{ color: "var(--text-subtle)", textDecoration: "underline" }}
+            className="text-text-subtle underline transition-colors hover:text-text-muted"
           >
             ← Beranda
           </Link>

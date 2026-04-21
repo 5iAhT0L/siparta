@@ -10,73 +10,13 @@ function FeatureCard({
   desc: string;
 }) {
   return (
-    <div
-      style={{
-        background: "var(--surface)",
-        border: "1.5px solid var(--border-muted)",
-        borderRadius: 16,
-        padding: "1.25rem 1.5rem",
-        display: "flex",
-        gap: "1rem",
-        alignItems: "flex-start",
-      }}
-    >
-      <div
-        style={{
-          flexShrink: 0,
-          width: 40,
-          height: 40,
-          borderRadius: 10,
-          background: "var(--primary-light)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "var(--primary)",
-        }}
-      >
+    <div className="group bg-white rounded-xl border border-gray-100 p-6 flex gap-5 items-start transition-all duration-300 hover:shadow-lg hover:border-emerald-100">
+      <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 transition-all duration-300 group-hover:bg-emerald-600 group-hover:text-white">
         {icon}
       </div>
-      <div>
-        <div
-          style={{
-            fontWeight: 600,
-            fontSize: "0.9rem",
-            color: "var(--text)",
-            marginBottom: "0.25rem",
-          }}
-        >
-          {title}
-        </div>
-        <div
-          style={{
-            fontSize: "0.8125rem",
-            color: "var(--text-muted)",
-            lineHeight: 1.55,
-          }}
-        >
-          {desc}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatBadge({ value, label }: { value: string; label: string }) {
-  return (
-    <div style={{ textAlign: "center" }}>
-      <div
-        style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--primary)" }}
-      >
-        {value}
-      </div>
-      <div
-        style={{
-          fontSize: "0.75rem",
-          color: "var(--text-muted)",
-          marginTop: "0.125rem",
-        }}
-      >
-        {label}
+      <div className="flex-1">
+        <h3 className="text-gray-900 font-semibold text-lg mb-1.5">{title}</h3>
+        <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
       </div>
     </div>
   );
@@ -84,49 +24,18 @@ function StatBadge({ value, label }: { value: string; label: string }) {
 
 export default function HomePage() {
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        background: "var(--bg)",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Navbar */}
-      <header
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-          background: "rgba(255,255,255,0.85)",
-          backdropFilter: "blur(12px)",
-          borderBottom: "1.5px solid var(--border-muted)",
-          padding: "0 1.5rem",
-          height: 56,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 9,
-              background: "var(--primary)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center shadow-sm">
             <svg
-              width="16"
-              height="16"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               stroke="white"
-              strokeWidth="2.5"
+              strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
@@ -134,128 +43,242 @@ export default function HomePage() {
               <path d="M9 21V12h6v9" />
             </svg>
           </div>
-          <span
-            style={{
-              fontWeight: 800,
-              fontSize: "0.9375rem",
-              color: "var(--primary)",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            SIPARTA
-          </span>
+          <span className="font-bold text-xl text-gray-900 tracking-tight">SIPARTA</span>
         </div>
+        <Link
+          href="/login"
+          className="text-sm font-semibold text-emerald-600 hover:text-emerald-800 transition-colors"
+        >
+          Masuk
+        </Link>
       </header>
 
       {/* Hero */}
-      <section
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "4rem 1.5rem 2rem",
-          textAlign: "center",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* Background blob */}
-        <div
-          style={{
-            position: "absolute",
-            top: -80,
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: 600,
-            height: 400,
-            background:
-              "radial-gradient(ellipse at center, #dcfce7 0%, transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
+      <section className="flex-1 flex flex-col items-center justify-center px-6 py-16 sm:py-20 text-center">
+        <div className="max-w-4xl mx-auto w-full">
+          <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-full px-4 py-1.5 mb-6 sm:mb-8 text-xs font-semibold text-emerald-700">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              stroke="none"
+              className="text-emerald-600"
+            >
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+            </svg>
+            Sistem Informasi RT/RW Digital
+          </div>
 
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.4rem",
-            background: "var(--primary-light)",
-            border: "1px solid var(--border)",
-            borderRadius: 999,
-            padding: "0.3rem 0.9rem",
-            marginBottom: "1.5rem",
-            fontSize: "0.75rem",
-            fontWeight: 600,
-            color: "var(--primary-dark)",
-            letterSpacing: "0.04em",
-          }}
-        >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="var(--primary)"
-            stroke="none"
-          >
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-          </svg>
-          Sistem Informasi RT/RW Digital
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight mb-6 tracking-tight">
+            Kelola RT/RW dengan
+            <br />
+            <span className="text-emerald-600">Mudah & Transparan</span>
+          </h1>
+
+          <p className="text-lg sm:text-xl text-gray-500 leading-relaxed mb-10 max-w-2xl mx-auto">
+            Platform all-in-one untuk mengelola iuran, kas, data warga, dan
+            pengumuman dengan lebih efisien.
+          </p>
+
+          <div className="flex gap-4 justify-center flex-wrap mb-12 sm:mb-16">
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-8 rounded-xl transition-all shadow-sm hover:shadow"
+            >
+              Mulai Sekarang
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+
+          {/* Stats */}
+          <div className="w-full bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+            <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 justify-center items-center">
+              <div className="text-center">
+                <p className="text-4xl sm:text-5xl font-bold text-emerald-600">3</p>
+                <p className="text-xs sm:text-sm text-gray-500 mt-2 font-medium">
+                  Peran Akses
+                </p>
+              </div>
+              <div className="hidden sm:block h-12 w-px bg-gray-200" />
+              <div className="text-center">
+                <p className="text-4xl sm:text-5xl font-bold text-emerald-600">
+                  100%
+                </p>
+                <p className="text-xs sm:text-sm text-gray-500 mt-2 font-medium">
+                  Cloud-Based
+                </p>
+              </div>
+              <div className="hidden sm:block h-12 w-px bg-gray-200" />
+              <div className="text-center">
+                <p className="text-4xl sm:text-5xl font-bold text-emerald-600">
+                  Real-time
+                </p>
+                <p className="text-xs sm:text-sm text-gray-500 mt-2 font-medium">
+                  Data Terkini
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
+      </section>
 
-        <h1
-          style={{
-            fontSize: "clamp(2rem, 5vw, 3.25rem)",
-            fontWeight: 800,
-            color: "var(--text)",
-            lineHeight: 1.15,
-            marginBottom: "1.25rem",
-            letterSpacing: "-0.02em",
-            maxWidth: 640,
-          }}
-        >
-          Kelola RT/RW
-          <br />
-          <span style={{ color: "var(--primary)" }}>
-            Lebih Mudah & Transparan
-          </span>
-        </h1>
+      {/* Features */}
+      <section className="px-6 py-20 sm:py-24 bg-gray-50 border-y border-gray-100">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-14 sm:mb-16">
+            <p className="text-xs font-bold text-emerald-600 tracking-widest uppercase mb-3">
+              Fitur Lengkap
+            </p>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight">
+              Semua yang dibutuhkan untuk kelola RT/RW
+            </h2>
+          </div>
 
-        <p
-          style={{
-            fontSize: "clamp(0.9rem, 2vw, 1.0625rem)",
-            color: "var(--text-muted)",
-            lineHeight: 1.65,
-            maxWidth: 520,
-            marginBottom: "2.25rem",
-          }}
-        >
-          SIPARTA membantu pengurus RT/RW mengelola iuran, kas, data warga, dan
-          pengumuman — semua dalam satu platform yang mudah digunakan.
-        </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <FeatureCard
+              title="Manajemen Iuran"
+              desc="Generate tagihan bulanan, lacak pembayaran, dan verifikasi bukti transfer."
+              icon={
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                </svg>
+              }
+            />
+            <FeatureCard
+              title="Kas & Laporan"
+              desc="Pantau pemasukan dan pengeluaran kas secara real-time dengan laporan transparan."
+              icon={
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M18 20V10M12 20V4M6 20v-6" />
+                </svg>
+              }
+            />
+            <FeatureCard
+              title="Data Warga & Rumah"
+              desc="Kelola data KK, penghuni, KTP, dan kontrak hunian dalam satu tempat."
+              icon={
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z" />
+                  <path d="M9 21V12h6v9" />
+                </svg>
+              }
+            />
+            <FeatureCard
+              title="Pengumuman"
+              desc="Sebar informasi dan pengumuman ke seluruh warga dengan cepat dan terstruktur."
+              icon={
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 11l19-9-9 19-2-8-8-2z" />
+                </svg>
+              }
+            />
+            <FeatureCard
+              title="Multi-level Akses"
+              desc="Tiga peran: Pengurus RT, Pengurus RW, dan Warga dengan hak akses sesuai."
+              icon={
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+                </svg>
+              }
+            />
+            <FeatureCard
+              title="Monitoring RW"
+              desc="Pantau seluruh RT di wilayah, kelola pengurus, dan monitor iuran keseluruhan."
+              icon={
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" />
+                  <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" />
+                </svg>
+              }
+            />
+          </div>
+        </div>
+      </section>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "0.75rem",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            marginBottom: "3rem",
-          }}
-        >
+      {/* CTA */}
+      <section className="px-6 py-20 sm:py-24">
+        <div className="max-w-3xl mx-auto bg-emerald-600 rounded-3xl p-8 sm:p-12 lg:p-16 text-center">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 tracking-tight">
+            Siap digitalisasi RT/RW Anda?
+          </h2>
+          <p className="text-base sm:text-lg text-emerald-50 mb-8 leading-relaxed max-w-2xl mx-auto">
+            Bergabunglah dengan ribuan RT/RW yang telah mempercayai SIPARTA
+            untuk mengelola komunitas mereka dengan lebih efisien dan
+            transparan.
+          </p>
           <Link
             href="/login"
-            className="btn-primary"
-            style={{
-              padding: "0.6rem 1.5rem",
-              fontSize: "0.9375rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.4rem",
-            }}
+            className="inline-flex items-center gap-2 bg-white text-emerald-700 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-50 transition-colors shadow-md"
           >
-            Coba Demo
+            Coba Demo Sekarang
             <svg
               width="16"
               height="16"
@@ -270,296 +293,19 @@ export default function HomePage() {
             </svg>
           </Link>
         </div>
-
-        {/* Stats */}
-        <div
-          style={{
-            display: "flex",
-            gap: "2.5rem",
-            padding: "1.25rem 2rem",
-            background: "var(--surface)",
-            borderRadius: 16,
-            border: "1.5px solid var(--border-muted)",
-            flexWrap: "wrap",
-            justifyContent: "center",
-          }}
-        >
-          <StatBadge value="3 Peran" label="RT · RW · Warga" />
-          <div
-            style={{
-              width: 1,
-              background: "var(--border-muted)",
-              alignSelf: "stretch",
-            }}
-          />
-          <StatBadge value="100%" label="Berbasis Web" />
-          <div
-            style={{
-              width: 1,
-              background: "var(--border-muted)",
-              alignSelf: "stretch",
-            }}
-          />
-          <StatBadge value="Real-time" label="Data Terkini" />
-        </div>
-      </section>
-
-      {/* Features */}
-      <section
-        style={{
-          padding: "3rem 1.5rem",
-          maxWidth: 900,
-          margin: "0 auto",
-          width: "100%",
-        }}
-      >
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <div
-            style={{
-              fontSize: "0.75rem",
-              fontWeight: 700,
-              color: "var(--primary)",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              marginBottom: "0.5rem",
-            }}
-          >
-            Fitur Utama
-          </div>
-          <h2
-            style={{
-              fontSize: "clamp(1.25rem, 3vw, 1.75rem)",
-              fontWeight: 700,
-              color: "var(--text)",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            Semua yang dibutuhkan pengurus RT/RW
-          </h2>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-            gap: "1rem",
-          }}
-        >
-          <FeatureCard
-            title="Manajemen Iuran"
-            desc="Generate tagihan bulanan & insidental, lacak pembayaran, dan verifikasi bukti transfer dengan mudah."
-            icon={
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-              </svg>
-            }
-          />
-          <FeatureCard
-            title="Kas & Laporan"
-            desc="Pantau pemasukan dan pengeluaran kas RT secara real-time dengan laporan yang lengkap dan transparan."
-            icon={
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M18 20V10M12 20V4M6 20v-6" />
-              </svg>
-            }
-          />
-          <FeatureCard
-            title="Data Warga & Rumah"
-            desc="Kelola data KK, penghuni, foto KTP, status kepemilikan, dan kontrak hunian dalam satu tempat."
-            icon={
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z" />
-                <path d="M9 21V12h6v9" />
-              </svg>
-            }
-          />
-          <FeatureCard
-            title="Pengumuman"
-            desc="Sebar informasi dan pengumuman kepada seluruh warga secara cepat dan terstruktur."
-            icon={
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 11l19-9-9 19-2-8-8-2z" />
-              </svg>
-            }
-          />
-          <FeatureCard
-            title="Multi-level Akses"
-            desc="Tiga peran berbeda: Pengurus RT, Pengurus RW, dan Warga — masing-masing dengan hak akses sesuai."
-            icon={
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
-              </svg>
-            }
-          />
-          <FeatureCard
-            title="Monitoring RW"
-            desc="Pengurus RW dapat memantau seluruh RT di wilayahnya, mengelola pengurus, dan memantau iuran."
-            icon={
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" />
-                <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" />
-              </svg>
-            }
-          />
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section
-        style={{
-          margin: "0 1.5rem 4rem",
-          maxWidth: 860,
-          marginLeft: "auto",
-          marginRight: "auto",
-          padding: "2.5rem 2rem",
-          background:
-            "linear-gradient(135deg, var(--primary) 0%, #15803d 100%)",
-          borderRadius: 20,
-          textAlign: "center",
-          color: "white",
-        }}
-      >
-        <h2
-          style={{
-            fontSize: "clamp(1.25rem, 3vw, 1.75rem)",
-            fontWeight: 700,
-            marginBottom: "0.75rem",
-            letterSpacing: "-0.01em",
-          }}
-        >
-          Siap digitalisasi RT/RW Anda?
-        </h2>
-        <p
-          style={{
-            fontSize: "0.9375rem",
-            opacity: 0.85,
-            marginBottom: "1.75rem",
-            lineHeight: 1.6,
-          }}
-        >
-          Mulai kelola iuran dan data warga dengan lebih efisien hari ini.
-        </p>
-        <div
-          style={{
-            display: "flex",
-            gap: "0.75rem",
-            justifyContent: "center",
-            flexWrap: "wrap",
-          }}
-        >
-          <Link
-            href="/login"
-            style={{
-              background: "white",
-              color: "var(--primary-dark)",
-              padding: "0.6rem 1.5rem",
-              borderRadius: 10,
-              fontWeight: 600,
-              fontSize: "0.9rem",
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.4rem",
-            }}
-          >
-            Coba Demo
-          </Link>
-        </div>
       </section>
 
       {/* Footer */}
-      <footer
-        style={{
-          borderTop: "1.5px solid var(--border-muted)",
-          padding: "1.5rem",
-          textAlign: "center",
-          fontSize: "0.8125rem",
-          color: "var(--text-subtle)",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "0.4rem",
-            marginBottom: "0.4rem",
-          }}
-        >
-          <div
-            style={{
-              width: 20,
-              height: 20,
-              borderRadius: 6,
-              background: "var(--primary)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+      <footer className="border-t border-gray-200 px-6 py-10 sm:py-12 text-center bg-white">
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <div className="w-6 h-6 rounded-md bg-emerald-600 flex items-center justify-center">
             <svg
-              width="10"
-              height="10"
+              width="12"
+              height="12"
               viewBox="0 0 24 24"
               fill="none"
               stroke="white"
-              strokeWidth="2.5"
+              strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
@@ -567,20 +313,11 @@ export default function HomePage() {
               <path d="M9 21V12h6v9" />
             </svg>
           </div>
-          <span
-            style={{
-              fontWeight: 700,
-              color: "var(--primary)",
-              fontSize: "0.875rem",
-            }}
-          >
-            SIPARTA
-          </span>
+          <span className="font-bold text-emerald-600">SIPARTA</span>
         </div>
-        <div>
-          Sistem Informasi Pencatatan RT/RW Terpadu &copy;{" "}
-          {new Date().getFullYear()}
-        </div>
+        <p className="text-xs text-gray-400">
+          Sistem Informasi Pencatatan RT/RW Terpadu © {new Date().getFullYear()}
+        </p>
       </footer>
     </div>
   );

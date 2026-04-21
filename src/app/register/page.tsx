@@ -52,33 +52,21 @@ function PwInput({
 }) {
   const [show, setShow] = useState(false);
   return (
-    <div style={{ position: "relative" }}>
+    <div className="relative">
       <input
         type={show ? "text" : "password"}
-        className="input"
+        className="input pr-10"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder ?? "••••••••"}
         autoComplete={autoComplete}
         required
         minLength={8}
-        style={{ paddingRight: "2.5rem" }}
       />
       <button
         type="button"
         onClick={() => setShow((p) => !p)}
-        style={{
-          position: "absolute",
-          right: "0.6rem",
-          top: "50%",
-          transform: "translateY(-50%)",
-          color: "var(--text-subtle)",
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          padding: 0,
-          lineHeight: 1,
-        }}
+        className="absolute right-2 top-1/2 -translate-y-1/2 text-text-subtle bg-none border-0 cursor-pointer p-0 leading-none transition-all hover:text-text"
       >
         <EyeIcon open={show} />
       </button>
@@ -232,29 +220,9 @@ export default function RegisterPage() {
 
   if (message) {
     return (
-      <div
-        style={{
-          minHeight: "100dvh",
-          background: "var(--bg)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "2rem 1rem",
-        }}
-      >
-        <div style={{ width: "100%", maxWidth: 420, textAlign: "center" }}>
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 16,
-              background: "var(--primary-light)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 1.25rem",
-            }}
-          >
+      <div className="min-h-dvh bg-bg flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-sm text-center">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary-light mb-5">
             <svg
               width="28"
               height="28"
@@ -269,40 +237,19 @@ export default function RegisterPage() {
               <path d="M22 4L12 14.01l-3-3" />
             </svg>
           </div>
-          <h2
-            style={{
-              fontSize: "1.25rem",
-              fontWeight: 700,
-              color: "var(--text)",
-              marginBottom: "0.75rem",
-            }}
-          >
+          <h2 className="text-xl font-bold text-text mb-3">
             Pendaftaran Terkirim!
           </h2>
-          <p
-            style={{
-              color: "var(--text-muted)",
-              fontSize: "0.9rem",
-              lineHeight: 1.6,
-              marginBottom: "1.75rem",
-            }}
-          >
+          <p className="text-text-muted text-sm leading-relaxed mb-7">
             {message}
           </p>
-          <Link
-            href="/login"
-            className="btn-primary"
-            style={{ display: "inline-flex" }}
-          >
+          <Link href="/login" className="btn-primary inline-flex">
             Masuk ke Akun
           </Link>
           <p className="text-xs mt-3">
             <Link
               href="/"
-              style={{
-                color: "var(--text-subtle)",
-                textDecoration: "underline",
-              }}
+              className="text-text-subtle underline transition-colors hover:text-text-muted"
             >
               ← Beranda
             </Link>
@@ -313,30 +260,10 @@ export default function RegisterPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        background: "var(--bg)",
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "center",
-        padding: "2rem 1rem 4rem",
-      }}
-    >
-      <div style={{ width: "100%", maxWidth: 480 }}>
-        <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 48,
-              height: 48,
-              borderRadius: 14,
-              background: "var(--primary)",
-              marginBottom: "0.875rem",
-            }}
-          >
+    <div className="min-h-dvh bg-bg flex items-start justify-center px-4 py-8 pb-16">
+      <div className="w-full max-w-2xl">
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary mb-3.5">
             <svg
               width="24"
               height="24"
@@ -351,18 +278,14 @@ export default function RegisterPage() {
               <path d="M9 21V12h6v9" />
             </svg>
           </div>
-          <div
-            className="font-bold"
-            style={{ fontSize: "1.25rem", color: "var(--text)" }}
-          >
-            Registrasi Warga
-          </div>
-          <div className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
+          <div className="font-bold text-xl text-text">Registrasi Warga</div>
+          <div className="text-sm mt-1 text-text-muted">
             Akun aktif setelah diverifikasi pengurus RT
           </div>
         </div>
 
         <div className="card">
+          {/* Form continues below */}
           <form onSubmit={onSubmit} className="space-y-4">
             {/* ── Lokasi ── */}
             <div>
